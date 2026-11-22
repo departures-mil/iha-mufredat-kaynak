@@ -88,6 +88,11 @@
       restart: async () => { a.otaRestart(); return true; },
     };
   }
+  /* v3.1: çekirdek 3 köprüsü — pencere düğmeleri, yedekten geri dönüş, hata günlüğü, ağ eşitlemesi */
+  if (window.desktop && window.desktop.shellVersion >= 3) {
+    const d = window.desktop;
+    Object.assign(P, { shell3: true, minimize: () => d.minimize(), toggleMaximize: () => d.toggleMaximize(), winState: () => d.winState(), onWinState: (cb) => d.onWinState(cb), backups: d.backups, logError: (x) => d.logError(x), readLog: () => d.readLog(), appInfo: () => d.appInfo(), openDataFolder: () => d.openDataFolder(), lan: d.lan });
+  }
   P.version = window.APP_VERSION || '1.0';
   window.Platform = P;
 

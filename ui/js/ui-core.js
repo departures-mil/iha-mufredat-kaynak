@@ -189,11 +189,11 @@
         <div class="gsearch" id="gsWrap"></div>
         <div class="progsel p-${Store.prog}" title="${t('program')}">${icon('plane')}<select id="progSel">${Store.PROGS.map((p) => `<option value="${p}" ${p === Store.prog ? 'selected' : ''}>${t('prog_' + p)}</option>`).join('')}</select></div>
         <div class="langsel">${icon('globe')}<select id="langSel">${MODES.map((l) => `<option value="${l}" ${l === mode() ? 'selected' : ''}>${modeName(l)}</option>`).join('')}</select></div>
-        ${Platform.kind !== 'android' ? `<button class="ib" id="fsBtn" title="${t('windowed')}">${icon('win')}</button>` : ''}
         <div class="tbact">
           <button class="tbb sync" id="syncChip">${icon('sync')}<span class="tl"></span></button>
           <button class="tbb upd" id="updChip">${icon('dl')}<span class="tl"></span><i class="dot"></i></button>
         </div>
+        ${Platform.kind === 'desktop' ? '<div class="winctl" id="winctl"></div>' : ''}
       </header>
       <nav class="sidebar">${NAV.map(([p, ic, k]) => `<a class="nav" data-go="${p}">${icon(ic)}<span>${t(k)}</span></a>`).join('')}
         <div class="navfoot">${icon('plane', 'big')}<div>${t('dataSafe')}</div></div></nav>
@@ -209,8 +209,7 @@
     $('#syncChip').oncontextmenu = (e) => { e.preventDefault(); go('settings', { anchor: 'sync' }); };
     $('#updChip').onclick = () => updClick();
     updChip();
-    const fb = $('#fsBtn');
-    if (fb) { const upd = (fs) => { fb.innerHTML = icon(fs ? 'win' : 'full'); fb.title = fs ? t('windowed') : t('fullscreen'); }; fb.onclick = async () => upd(await Platform.toggleFullscreen()); Platform.isFullscreen().then(upd); Platform.onFullscreen(upd); }
+    if (window.WinCtl) WinCtl.mount($('#winctl')); // v3.1: küçült · tam ekran ⇄ pencere · kapat
     $$('[data-go]').forEach((a) => (a.onclick = () => go(a.dataset.go)));
     syncChip();
     if (window.GSearch) GSearch.mount();
@@ -242,7 +241,9 @@
   }
   function syncClick() {
     const s = Sync.state;
-    if (s === 'off' || !Sync.user || (s === 'error' && Sync.msg === 'login')) { toast(t('syncSetup')); go('settings', { anchor: 'sync' }); return; }
+    const lanOn = window.Lan && Lan.available() && Lan.cfg().on;
+    if (lanOn) Lan.syncAll(s === 'off' || !Sync.user ? false : true); // v3.1: internetsiz eşitleme de birlikte
+    if (s === 'off' || !Sync.user || (s === 'error' && Sync.msg === 'login')) { if (!lanOn) { toast(t('syncSetup')); go('settings', { anchor: 'sync' }); } return; }
     if (s === 'busy' || s === 'connecting') return;
     Sync.syncNow(); if (window.Files) Files.pushPending(); toast(t('syncStarted'));
   }
@@ -366,12 +367,14 @@
       <details class="adv" open><summary>${t('advanced')}</summary><label class="fl"><span>${t('fbConfig')}</span><textarea id="fbCfg" rows="5" dir="ltr" placeholder="${esc(t('fbConfigPh'))}">${sy.config && sy.config.projectId !== FB_CONFIG.projectId ? esc(JSON.stringify(sy.config, null, 1)) : ''}</textarea></label><button class="btn sm ghost" id="fbPaste">${icon('copy')} ${t('pasteLink')}</button></details>` : `
       <div class="row"><button class="btn pri" id="fbNow">${icon('cloud')} ${t('syncNow')}</button><button class="btn" id="fbCopy">${icon('copy')} ${t('copyLink')}</button><button class="btn ghost danger" id="fbOut">${t('logout')}</button></div><p class="muted sm">${t('linkHelp')}</p>`}
     </div>
+    ${window.Lan ? Lan.cardHtml() : ''}
+    ${window.Pro ? Pro.conflictCardHtml() : ''}
     <div id="kulYer"></div>
-    ${Contact.cardHtml()}
-    <div class="card"><h3>${t('backup')}</h3><div class="row"><button class="btn" id="expBtn">${icon('dl')} ${t('exportData')}</button><label class="btn">${icon('ul')} ${t('importData')}<input type="file" accept=".json,application/json" id="impIn" hidden></label>${Platform.kind === 'desktop' ? `<button class="btn ghost" id="bkFolder">${t('openBackupFolder')}</button>` : ''}</div>${Platform.kind === 'desktop' ? `<p class="muted sm">${t('autoBackupInfo')}</p>` : ''}</div>
+    <div class="card"><h3>${t('backup')}</h3><div class="row"><button class="btn" id="expBtn">${icon('dl')} ${t('exportData')}</button><label class="btn">${icon('ul')} ${t('importData')}<input type="file" accept=".json,application/json" id="impIn" hidden></label>${window.Pro ? Pro.backupExtraHtml() : ''}${Platform.kind === 'desktop' ? `<button class="btn ghost" id="bkFolder">${t('openBackupFolder')}</button>` : ''}</div>${Platform.kind === 'desktop' ? `<p class="muted sm">${t('autoBackupInfo')}</p>` : ''}</div>
     ${Platform.kind === 'desktop' ? `<div class="card"><h3>${t('display')}</h3><p>${t('startFullscreen')}</p><button class="btn" id="fsToggle">${icon('win')} ${t('windowed')} / ${t('fullscreen')}</button></div>` : ''}
-    <div class="card"><h3>${t('about')}</h3><p><b>${t('appName')}</b> — ${t('version')} <b>v${Platform.version}</b> (${Platform.kind})</p><p class="muted">${t('dataSafe')}</p></div>`;
-    wireUpd(m); Contact.wire(m);
+    ${window.Pro ? Pro.aboutHtml() : `<div class="card"><h3>${t('about')}</h3><p><b>${t('appName')}</b> — ${t('version')} <b>v${Platform.version}</b> (${Platform.kind})</p><p class="muted">${t('dataSafe')}</p></div>`}
+    ${Contact.cardHtml()}`;
+    wireUpd(m); Contact.wire(m); if (window.Pro) Pro.wire(m);
     { const ky = $('#kulYer', m); if (ky && window.Kullanim) { const k = Kullanim.kart(); k.classList.add('card'); ky.replaceWith(k); } }
     { const fr = $('#fbRehber', m); if (fr) fr.onclick = (e) => { e.preventDefault(); try { Platform.openUrl ? Platform.openUrl(FB_REHBER) : window.open(FB_REHBER, '_blank'); } catch (er) { window.open(FB_REHBER, '_blank'); } }; }
     $$('[data-lang]', m).forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));
@@ -526,6 +529,9 @@
       Sync.start();
       Updater.on(() => { updChip(); const b = $('#updBox'); if (b) { b.innerHTML = updBoxHtml(); wireUpdBox(b); } });
       Updater.init();
+      if (window.Pro) Pro.start();
+      if (window.KabukGec) setTimeout(() => KabukGec.check(), 2500);
+      if (window.Lan) Lan.start();
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modals.length) modals[modals.length - 1](); });
     },
   };

@@ -19,3 +19,12 @@ Firebase'de (`mufredat-bc0ad`) durur; **kayıtlar bu depoda bulunmaz**.
 - Ayarlar > Kullanım Limitleri (`ui/js/kullanim.js` = duyurular/istemci/kullanim.js); SDK sayımı `sync.js` içinde.
 - Programla gelen ortak Firebase projesi kaldırıldı (`FB_CONFIG = {}`); eski projede (`FB_YAYIN`) yalnız yönetici kalır.
   Kullanıcılar güncellemeye yalnız GitHub'dan bakar; Firebase yedek kanalını yalnız yönetici oturumu okur.
+
+## 3.1 (2026-11-22)
+- Çekirdek 3 (`kabuk/`): `boot.js` açılış koruyucusu (yeni çekirdek açılmazsa `.prev`'e döner), `lan.js` internetsiz eşitleme
+  (TCP 47811…, UDP 47812, HMAC imzalı), pencere düğmeleri (win:min / win:max), yedekten geri dönüş (backup:*), hata günlüğü,
+  `kabuk:apply` ile uygulama içinden çekirdek güncellemesi. `package.json` → `main: boot.js`.
+- `araclar/kabuk_paket.py`: çekirdek dosyalarını `ui/js/kabuk-paket.js` içine gömer (yayinla.py kendisi çağırır).
+  Çekirdek 2 kurulumlar `kabukgec.js` ile tek seferlik geçiş betiğiyle (cmd + PowerShell) 3'e geçer; çekirdek 3'te doğrudan IPC.
+- `merge.js`: üç yönlü birleştirme; `sync.js` (bulut) ve `agesitle.js` (ağ) bunu kullanır. Ortak atalar ve çakışma kayıtları IndexedDB `iha-esitleme`.
+- `pencere.js` (sağ üst pencere düğmeleri), `pro.js` (açılış ekranı, yenilikler, hata raporu, kısayollar, yedekten geri yükleme, hakkında), `i18n-pro.js`, `changelog.js`.

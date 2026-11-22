@@ -1,6 +1,7 @@
 /* Firebase (Firestore) ile masaüstü ↔ Android senkronizasyonu
    Yapı: mufredat/{kurumKodu}/meta/curriculum, mufredat/{kurumKodu}/meta/config, mufredat/{kurumKodu}/students/{id}
-   Her belge: { data: JSON metni, updatedAt: ms, by: cihazKimliği } — son yazan kazanır (updatedAt'e göre). */
+   Her belge: { data: JSON metni, updatedAt: ms, by: cihazKimliği }.
+   v3.1: iki cihazda birden değişen kayıtlar artık üç yönlü birleştirilir (merge.js); hiçbir değişiklik sessizce kaybolmaz. */
 (function () {
   const Y = {
     state: 'off', msg: '', user: null, app: null, auth: null, fs: null, unsubs: [], dirty: new Set(), timer: null, ready: { curriculum: false, config: false, students: false },
@@ -76,19 +77,39 @@
     metaParts() { return ['curriculum', 'config', 'plans'].concat(Object.keys(Store.db.curricula || {}).map((p) => 'curriculum_' + p)); },
     getPart(part) { if (part === 'plans') return Store.db.plans; return part === 'config' ? Store.db.config : part === 'curriculum' ? Store.db.curriculum : (Store.db.curricula || {})[part.slice(11)]; },
     setPart(part, obj) { if (part === 'plans') { obj.list = obj.list || {}; Store.db.plans = obj; return; } if (part === 'config') Store.db.config = obj; else if (part === 'curriculum') Store.db.curriculum = obj; else Store.db.curricula[part.slice(11)] = obj; },
-    attach() {
+    /* v3.1: gelen kaydı yerel kayıtla karşılaştırır — gerekirse birleştirir. Yerelde değişiklik yoksa bulut sürümü alınır. */
+    incoming(key, r) {
+      const local = Merge.getRec(key); const lu = (local && local.updatedAt) || 0; const ru = r.updatedAt || 0;
+      const base = Merge.getBase('fb', key);
+      if (local && lu === ru) { if (!base) Merge.setBase('fb', key, local); return false; }
+      const remoteChanged = !base || ru !== (base.updatedAt || 0);
+      const localChanged = !!local && lu > 0 && (base ? lu !== (base.updatedAt || 0) : lu > (Store.local.lastSync || 0));
+      if (!remoteChanged) { if (localChanged) this.dirty.add(key); return false; }
+      let remote; try { remote = JSON.parse(r.data); remote.updatedAt = ru; } catch (e) { console.error(e); return false; }
+      if (!localChanged) { Merge.setRec(key, remote); Merge.setBase('fb', key, remote); return true; }
+      if (base) {
+        const m = Merge.record(base, local, remote);
+        Merge.setRec(key, m.merged); Merge.setBase('fb', key, remote);
+        Merge.logConflicts(key, m.merged, m.conflicts, 'bulut');
+        this.dirty.add(key); return true;
+      }
+      // ortak ata yok (eski sürümden ilk eşitleme): daha yeni olan kazanır, öbürü çakışma kaydına bütün olarak yazılır
+      if (Merge.eq(Object.assign({}, local, { updatedAt: 0 }), Object.assign({}, remote, { updatedAt: 0 }))) { Merge.setBase('fb', key, remote); return false; }
+      if (ru > lu) { Merge.logConflicts(key, local, [{ path: [], kept: 'bulut', lost: local }], 'bulut'); Merge.setRec(key, remote); Merge.setBase('fb', key, remote); return true; }
+      Merge.logConflicts(key, local, [{ path: [], kept: 'yerel', lost: remote }], 'bulut'); Merge.setBase('fb', key, remote); this.dirty.add(key); return false;
+    },
+    async attach() {
+      try { await Merge.loadAll(); } catch (e) {}
       const ws = Store.local.sync.workspace;
       this.ready = { students: false }; this.metaParts().forEach((p) => (this.ready[p] = false));
       const onErr = (e) => { console.error(e); if (e && e.code === 'resource-exhausted') window.Kullanim&&Kullanim.kotaDoldu('bulut'); this.setState('error', e.code || e.message); };
       for (const part of this.metaParts()) {
         this.unsubs.push(FB.onSnapshot(this.ref('meta', part), (snap) => {
           if (!snap.metadata.fromCache) window.Kullanim&&Kullanim.say('okuma', 1);
-          const local = this.getPart(part);
           if (!snap.exists()) { this.dirty.add(part); this.schedule(50); }
           else {
-            const r = snap.data();
-            if ((r.updatedAt || 0) > (local.updatedAt || 0)) { try { const o = JSON.parse(r.data); o.updatedAt = r.updatedAt; this.setPart(part, o); Store.persist(); Store.emit(part); } catch (e) { console.error(e); } }
-            else if ((local.updatedAt || 0) > (r.updatedAt || 0)) { this.dirty.add(part); this.schedule(50); }
+            if (this.incoming(part, snap.data())) { Store.persist(); Store.emit(part); }
+            if (this.dirty.size) this.schedule(50);
           }
           this.ready[part] = true; this.okState();
         }, part === 'plans' ? (e) => { console.warn('plans', e.code || e.message); this.ready.plans = true; this.okState(); } : onErr));
@@ -97,9 +118,8 @@
         if (!qs.metadata.fromCache) window.Kullanim&&Kullanim.say('okuma', Math.max(1, qs.docChanges().length));
         const remoteIds = new Set(); let changed = false;
         qs.forEach((d) => {
-          remoteIds.add(d.id); const r = d.data(); const l = Store.db.students[d.id];
-          if (!l || (r.updatedAt || 0) > (l.updatedAt || 0)) { try { const obj = JSON.parse(r.data); obj.updatedAt = r.updatedAt; Store.db.students[d.id] = obj; changed = true; } catch (e) {} }
-          else if ((l.updatedAt || 0) > (r.updatedAt || 0)) this.dirty.add('student:' + d.id);
+          remoteIds.add(d.id);
+          if (this.incoming('student:' + d.id, d.data())) changed = true;
         });
         if (!this.ready.students) { for (const id of Object.keys(Store.db.students)) if (!remoteIds.has(id)) this.dirty.add('student:' + id); }
         if (changed) { Store.persist(); Store.emit('students'); }
@@ -119,19 +139,20 @@
       const parts = [...this.dirty]; this.dirty.clear();
       this.setState('busy');
       try {
-        const batch = FB.writeBatch(this.fs); let n = 0;
+        const batch = FB.writeBatch(this.fs); let n = 0; const sent = [];
         const by = Store.local.deviceId;
         for (const p of parts) {
           if (p === 'plans') continue; // ayrı yazılır (aşağıda)
-          if (p === 'curriculum' || p === 'config' || p.startsWith('curriculum_')) { const o = this.getPart(p); if (!o) continue; if (!o.updatedAt) o.updatedAt = Date.now(); batch.set(this.ref('meta', p), { data: JSON.stringify(o), updatedAt: o.updatedAt, by }); n++; }
-          else if (p.startsWith('student:')) { const id = p.slice(8); const s = Store.db.students[id]; if (!s) continue; if (!s.updatedAt) s.updatedAt = Date.now(); batch.set(this.ref('students', id), { data: JSON.stringify(s), updatedAt: s.updatedAt, by }); n++; }
-          if (n >= 400) break;
+          if (p === 'curriculum' || p === 'config' || p.startsWith('curriculum_')) { const o = this.getPart(p); if (!o) continue; if (!o.updatedAt) o.updatedAt = Date.now(); const js = JSON.stringify(o); batch.set(this.ref('meta', p), { data: js, updatedAt: o.updatedAt, by }); sent.push([p, js]); n++; }
+          else if (p.startsWith('student:')) { const id = p.slice(8); const s = Store.db.students[id]; if (!s) continue; if (!s.updatedAt) s.updatedAt = Date.now(); const js = JSON.stringify(s); batch.set(this.ref('students', id), { data: js, updatedAt: s.updatedAt, by }); sent.push([p, js]); n++; }
+          if (n >= 400) { parts.slice(parts.indexOf(p) + 1).forEach((q) => this.dirty.add(q)); break; } // v3.1: kalanlar bir sonraki turda
         }
-        if (n) { await batch.commit(); window.Kullanim&&Kullanim.say('yazma', n); }
+        if (n) { await batch.commit(); window.Kullanim&&Kullanim.say('yazma', n); sent.forEach(([k, v]) => Merge.setBase('fb', k, v)); }
         // v2.1: ortak ders programları ayrı yazılır; bir sorun diğer kayıtların eşitlenmesini engellemez
-        if (parts.includes('plans') && Store.db.plans) { try { const o = Store.db.plans; if (!o.updatedAt) o.updatedAt = Date.now(); await FB.setDoc(this.ref('meta', 'plans'), { data: JSON.stringify(o), updatedAt: o.updatedAt, by }); window.Kullanim&&Kullanim.say('yazma', 1); } catch (e) { console.warn('plans sync', e.code || e.message); } }
+        if (parts.includes('plans') && Store.db.plans) { try { const o = Store.db.plans; if (!o.updatedAt) o.updatedAt = Date.now(); const js = JSON.stringify(o); await FB.setDoc(this.ref('meta', 'plans'), { data: js, updatedAt: o.updatedAt, by }); Merge.setBase('fb', 'plans', js); window.Kullanim&&Kullanim.say('yazma', 1); } catch (e) { console.warn('plans sync', e.code || e.message); } }
         Store.local.lastSync = Date.now(); Store.saveLocal();
         this.setState('on');
+        if (this.dirty.size) this.schedule(300);
       } catch (e) { console.error(e); parts.forEach((p) => this.dirty.add(p)); this.setState(navigator.onLine === false ? 'offline' : 'error', e.code || e.message); this.schedule(15000); }
     },
     syncNow() { this.markDirty('all'); this.schedule(10); },
