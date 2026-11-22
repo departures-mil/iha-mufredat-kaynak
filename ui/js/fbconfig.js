@@ -1,5 +1,9 @@
-/* Gömülü Firebase yapılandırması (proje: mufredat-bc0ad). apiKey gizli değildir; güvenlik Firestore kurallarıyla sağlanır. */
-window.FB_CONFIG = {
+/* 2.9: Programla gelen ortak Firebase projesi KALDIRILDI — her kurum kendi ücretsiz Firebase hesabını kullanır
+   (yöneticinin günlük sınırı başkalarınca harcanmasın). FB_CONFIG boştur; kullanıcı kendi firebaseConfig'ini yapıştırır.
+   FB_YAYIN yalnızca yöneticinin yedek güncelleme kanalı ve eski ortak projeden geçiş içindir. */
+window.FB_CONFIG = {};
+window.FB_REHBER = 'https://github.com/departures-mil/duyurular/blob/main/firebase-kurulum.md';
+window.FB_YAYIN = {
   apiKey: 'AIzaSyDRLeBB2OC95Wg4LxpMfr4szGSKiLdhpRM',
   authDomain: 'mufredat-bc0ad.firebaseapp.com',
   projectId: 'mufredat-bc0ad',

@@ -29,7 +29,7 @@
       this.fs = FB.initializeFirestore(this.app, { localCache: FB.memoryLocalCache(), experimentalAutoDetectLongPolling: true });
     },
     async connect({ config, workspace, email, password, create }) {
-      const cfg = (config && String(config).trim() ? this.parseConfig(config) : null) || window.FB_CONFIG;
+      const cfg = (config && String(config).trim() ? this.parseConfig(config) : null) || (window.FB_CONFIG && window.FB_CONFIG.apiKey ? window.FB_CONFIG : null);
       if (!cfg) throw new Error(t('syncInvalid'));
       const ws = this.wsId(workspace);
       if (!ws) throw new Error(t('workspace') + ': ' + t('required'));
@@ -44,7 +44,11 @@
     },
     async start() {
       const s = Store.local.sync;
-      if (s && !s.config) s.config = window.FB_CONFIG;
+      if (s && !s.config && window.FB_CONFIG && window.FB_CONFIG.apiKey) s.config = window.FB_CONFIG;
+      // 2.9: eski ortak projeden çıkış — yalnız yönetici hesabı orada kalır
+      if (s && s.config && window.FB_YAYIN && s.config.projectId === window.FB_YAYIN.projectId && String(s.email || '').toLowerCase() !== String(window.FB_ADMIN_EMAIL || '').toLowerCase()) {
+        Object.assign(s, { enabled: false, config: null, ortakKesildi: true }); delete s.cred; Store.saveLocal();
+      }
       if (!s || !s.enabled || !s.config || !s.workspace) { this.setState('off'); return; }
       try {
         this.setState('connecting');
@@ -75,9 +79,10 @@
     attach() {
       const ws = Store.local.sync.workspace;
       this.ready = { students: false }; this.metaParts().forEach((p) => (this.ready[p] = false));
-      const onErr = (e) => { console.error(e); this.setState('error', e.code || e.message); };
+      const onErr = (e) => { console.error(e); if (e && e.code === 'resource-exhausted') window.Kullanim&&Kullanim.kotaDoldu('bulut'); this.setState('error', e.code || e.message); };
       for (const part of this.metaParts()) {
         this.unsubs.push(FB.onSnapshot(this.ref('meta', part), (snap) => {
+          if (!snap.metadata.fromCache) window.Kullanim&&Kullanim.say('okuma', 1);
           const local = this.getPart(part);
           if (!snap.exists()) { this.dirty.add(part); this.schedule(50); }
           else {
@@ -89,6 +94,7 @@
         }, part === 'plans' ? (e) => { console.warn('plans', e.code || e.message); this.ready.plans = true; this.okState(); } : onErr));
       }
       this.unsubs.push(FB.onSnapshot(FB.collection(this.fs, 'mufredat', ws, 'students'), (qs) => {
+        if (!qs.metadata.fromCache) window.Kullanim&&Kullanim.say('okuma', Math.max(1, qs.docChanges().length));
         const remoteIds = new Set(); let changed = false;
         qs.forEach((d) => {
           remoteIds.add(d.id); const r = d.data(); const l = Store.db.students[d.id];
@@ -121,9 +127,9 @@
           else if (p.startsWith('student:')) { const id = p.slice(8); const s = Store.db.students[id]; if (!s) continue; if (!s.updatedAt) s.updatedAt = Date.now(); batch.set(this.ref('students', id), { data: JSON.stringify(s), updatedAt: s.updatedAt, by }); n++; }
           if (n >= 400) break;
         }
-        if (n) await batch.commit();
+        if (n) { await batch.commit(); window.Kullanim&&Kullanim.say('yazma', n); }
         // v2.1: ortak ders programları ayrı yazılır; bir sorun diğer kayıtların eşitlenmesini engellemez
-        if (parts.includes('plans') && Store.db.plans) { try { const o = Store.db.plans; if (!o.updatedAt) o.updatedAt = Date.now(); await FB.setDoc(this.ref('meta', 'plans'), { data: JSON.stringify(o), updatedAt: o.updatedAt, by }); } catch (e) { console.warn('plans sync', e.code || e.message); } }
+        if (parts.includes('plans') && Store.db.plans) { try { const o = Store.db.plans; if (!o.updatedAt) o.updatedAt = Date.now(); await FB.setDoc(this.ref('meta', 'plans'), { data: JSON.stringify(o), updatedAt: o.updatedAt, by }); window.Kullanim&&Kullanim.say('yazma', 1); } catch (e) { console.warn('plans sync', e.code || e.message); } }
         Store.local.lastSync = Date.now(); Store.saveLocal();
         this.setState('on');
       } catch (e) { console.error(e); parts.forEach((p) => this.dirty.add(p)); this.setState(navigator.onLine === false ? 'offline' : 'error', e.code || e.message); this.schedule(15000); }
