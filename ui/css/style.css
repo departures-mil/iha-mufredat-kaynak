@@ -244,3 +244,25 @@ details.adv{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}det
 @keyframes tbspin{to{transform:rotate(360deg)}}
 @keyframes tbpulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media (max-width:760px){.tbact{gap:4px;padding-inline-start:2px;border:0}.tbb{padding:0 8px;height:32px}.tbb .tl{display:none}.tbb.upd.s-downloading .tl{display:inline;font-size:11px}.tbb .tl2{display:none}}
+
+/* ---------- v3.1: pencere düğmeleri (sağ üst köşe; Arapçada da sağda) ---------- */
+.winctl{display:flex;align-items:stretch;gap:2px;margin-inline-start:6px;padding-inline-start:8px;border-inline-start:1px solid var(--line);align-self:stretch;direction:ltr}
+html[dir=rtl] .winctl{order:-1;margin-inline-start:0;margin-inline-end:6px;padding-inline-start:0;padding-inline-end:8px;border-inline-start:0;border-inline-end:1px solid var(--line)}
+html[dir=rtl] .topbar{direction:rtl}
+.winctl .wb{width:40px;border:0;background:transparent;color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;margin:8px 0;transition:.12s}
+.winctl .wb .ic{width:17px;height:17px}.winctl .wb:hover{background:rgba(255,255,255,.1);color:var(--tx)}.winctl .wb.wx:hover{background:#e53935;color:#fff}
+@media (max-width:760px){.winctl .wb{width:32px}}
+/* ---------- açılış ekranı ---------- */
+#splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(circle at 50% 40%,#103a6b,#061327 70%);color:#e8f1fb;transition:opacity .5s}
+#splash.gone{opacity:0;pointer-events:none}#splash svg{width:96px;height:96px;filter:drop-shadow(0 6px 18px rgba(79,195,247,.35));animation:spl 2.4s ease-in-out infinite}
+#splash .st{font-weight:800;font-size:20px;letter-spacing:.4px}#splash .sb{width:160px;height:3px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}#splash .sb i{display:block;width:40%;height:100%;background:linear-gradient(90deg,#4fc3f7,#ffb74d);animation:spb 1.2s ease-in-out infinite}
+@keyframes spl{50%{transform:translateY(-6px)}}@keyframes spb{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+/* ---------- ayarlar: ağ eşitlemesi, çakışmalar, yedekler, hakkında ---------- */
+.lanpeers{list-style:none;padding:0;margin:8px 0;display:flex;flex-wrap:wrap;gap:8px}.lanpeers li{display:flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:20px;padding:5px 12px;background:rgba(255,255,255,.04)}.lanpeers .ic{width:15px;height:15px}
+.row .grow{flex:1;min-width:160px}
+.cfl{list-style:none;padding:0;margin:0 0 10px;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto}.cfl li{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--panel2)}.cfl code{font-size:12px;word-break:break-all;color:var(--tx)}.cfl .row{margin-top:6px}
+.bklist{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}.bkrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;text-align:start;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--panel2);color:var(--tx);cursor:pointer}.bkrow:hover{border-color:var(--line2);background:rgba(33,150,243,.18)}
+.about{display:flex;gap:16px;align-items:center}.about .logo.big svg{width:64px;height:64px}.about p{margin:2px 0}
+.logpre{white-space:pre-wrap;font-size:12px;max-height:60vh;overflow:auto;background:rgba(3,12,26,.6);padding:10px;border-radius:8px}
+.kbgrid{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center}.kbgrid kbd{font-family:ui-monospace,Consolas,monospace;font-size:12px;border:1px solid var(--line2);border-bottom-width:2px;border-radius:6px;padding:3px 8px;background:rgba(255,255,255,.06);justify-self:start}
+.wnl,.kgl{margin:6px 0 10px;padding-inline-start:20px;line-height:1.55}.wnl li,.kgl li{margin:4px 0}.kgcd{color:var(--amber)}

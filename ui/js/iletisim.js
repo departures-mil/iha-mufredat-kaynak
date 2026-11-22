@@ -66,7 +66,7 @@
   async function flush() {
     const box = Store.local.outbox || []; if (!box.length || navigator.onLine === false) return;
     const left = []; let sent = 0;
-    for (const m of box) { try { const st = await deliver(m); if (st.mail === 'ok') sent++; else left.push(m); } catch (e) { left.push(m); } }
+    for (const m of box) { try { const st = await deliver(m); if (st.mail === 'ok') { if (!m.auto) sent++; } else left.push(m); } catch (e) { left.push(m); } }
     Store.local.outbox = left; Store.saveLocal();
     if (sent) toast(t('ctQueuedSent'));
   }
@@ -146,5 +146,13 @@
     } catch (e) { $('#ctList', mm.el).innerHTML = `<p class="err">${esc(e.code || e.message)}</p>`; }
   }
 
-  window.Contact = { cardHtml, wire, flush, checkUnread };
+  /* v3.1: otomatik hata raporu — yalnız hata metni, sürüm ve cihaz türü (kayıt yok). Gitmezse kuyruğa alınır. */
+  async function autoReport(text) {
+    const msg = { id: Store.uid('e'), t: Date.now(), name: 'Otomatik hata raporu', reply: '', topic: 'ctBug', topicTr: I18N.tr.ctBug, text: String(text).slice(0, 3000), inst: '', prog: I18N.tr['prog_' + Store.prog], device: Platform.kind + ' ' + (navigator.userAgent.match(/Windows NT [\d.]+|Android [\d.]+/) || [''])[0], ver: Platform.version, lang: UI.lang(), auto: true };
+    msg.st = { fb: 'ok' }; // hata raporu kurum alanına yazılmaz, yalnız yöneticiye e-posta
+    try { const st = await deliver(msg); if (st.mail === 'ok') return true; } catch (e) {}
+    const box = Store.local.outbox || []; if (box.filter((x) => x.auto).length < 10) { box.push(msg); Store.local.outbox = box; Store.saveLocal(); }
+    return false;
+  }
+  window.Contact = { cardHtml, wire, flush, checkUnread, autoReport };
 })();

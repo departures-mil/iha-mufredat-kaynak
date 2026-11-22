@@ -27,6 +27,8 @@ def main():
     en = a[2] if len(a) > 2 else tr
     ar = a[3] if len(a) > 3 else tr
     open(os.path.join(UI, 'js', 'version.js'), 'w').write("window.APP_VERSION='%s';\n" % ver)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import kabuk_paket; kabuk_paket.build(ver)  # 3.1: çekirdek 3 dosyaları pakete gömülür
     files = {}
     for r, ds, fs in os.walk(UI):
         ds[:] = [d for d in ds if d != 'vendor']

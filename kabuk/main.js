@@ -1,4 +1,6 @@
-/* İHA Müfredat Sistemi — masaüstü ana süreç (Electron)
+/* İHA Müfredat Sistemi — masaüstü ana süreç (Electron) — kabuk 3
+   - 3: pencere düğmeleri (küçült / tam ekran ⇄ pencere / kapat), internetsiz ağ eşitlemesi (lan.js),
+     günlük yedeklerden geri dönüş, hata günlüğü, çekirdeğin uygulama içinden güncellenmesi (boot.js korumalı).
    - Her açılışta tam ekran başlar; F11 ya da üst çubuktaki düğme ile pencere görünümüne geçilir.
    - Veriler %APPDATA%\IHAMufredatSistemi klasöründe tutulur; yamalar yalnız program dosyalarını değiştirir, bu klasöre dokunmaz.
    - Her gün otomatik yedek alınır (son 30 gün). */
@@ -16,7 +18,11 @@ const DATA_DIR = app.getPath('userData');
 const DB_FILE = path.join(DATA_DIR, 'veri', 'db.json');
 const BK_DIR = path.join(DATA_DIR, 'yedekler');
 const UI_DIR = path.join(__dirname, 'ui');
-const SHELL_VERSION = 2; // uygulama içi güncelleme (OTA) arayüzü
+const SHELL_VERSION = 3; // uygulama içi güncelleme (OTA) arayüzü
+const KABUK_VER = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'kabuk-durum.json'), 'utf8')).version || '3'; } catch (e) { return '3'; } })();
+const LOG_FILE = path.join(DATA_DIR, 'hatalar.log');
+function logErr(text) { try { ensureDir(DATA_DIR); if (fs.existsSync(LOG_FILE) && fs.statSync(LOG_FILE).size > 300000) fs.renameSync(LOG_FILE, LOG_FILE + '.1'); fs.appendFileSync(LOG_FILE, new Date().toISOString() + ' ' + String(text).slice(0, 4000) + '\n'); } catch (e) {} }
+process.on('uncaughtException', (e) => { logErr('ana: ' + (e && e.stack || e)); });
 
 /* ---------- Uygulama içi güncelleme (OTA) ----------
    Yeni arayüz paketleri %APPDATA%\IHAMufredatSistemi\ota\<sürüm>\ klasörüne yazılır.
@@ -98,6 +104,9 @@ function createWindow() {
   const sendFs = () => { if (win && !win.isDestroyed()) win.webContents.send('fs-changed', win.isFullScreen()); };
   let sizing = false;
   win.on('enter-full-screen', sendFs);
+  const sendWs = () => { if (win && !win.isDestroyed()) win.webContents.send('win-state', { fs: win.isFullScreen(), max: win.isMaximized(), min: win.isMinimized() }); };
+  ['maximize', 'unmaximize', 'restore', 'enter-full-screen', 'leave-full-screen'].forEach((ev) => win.on(ev, () => setTimeout(sendWs, 60)));
+  win.webContents.on('render-process-gone', (e, d) => logErr('arayüz çöktü: ' + JSON.stringify(d)));
   win.on('leave-full-screen', () => {
     sendFs();
     if (sizing) return; sizing = true;
@@ -126,6 +135,44 @@ app.whenReady().then(() => {
   ipcMain.handle('db:load', () => { for (const f of [DB_FILE, DB_FILE + '.bak']) { try { if (fs.existsSync(f)) { const s = fs.readFileSync(f, 'utf8'); JSON.parse(s); return s; } } catch (e) {} } return null; });
   ipcMain.handle('win:toggleFs', () => { const v = !win.isFullScreen(); win.setFullScreen(v); return v; });
   ipcMain.handle('win:isFs', () => win.isFullScreen());
+  // ---- kabuk 3: pencere düğmeleri ----
+  ipcMain.handle('win:min', () => { if (win.isFullScreen()) { win.once('leave-full-screen', () => setTimeout(() => win.minimize(), 250)); win.setFullScreen(false); } else win.minimize(); return true; });
+  ipcMain.handle('win:max', () => { if (win.isFullScreen()) win.setFullScreen(false); else if (win.isMaximized()) win.unmaximize(); else win.maximize(); return true; });
+  ipcMain.handle('win:state', () => ({ fs: win.isFullScreen(), max: win.isMaximized(), min: win.isMinimized() }));
+  // ---- kabuk 3: yedeklerden geri dönüş ----
+  const BK_RX = /^[\w.-]+\.json$/;
+  ipcMain.handle('backup:list', () => { ensureDir(BK_DIR); return fs.readdirSync(BK_DIR).filter((f) => BK_RX.test(f)).map((f) => { const st = fs.statSync(path.join(BK_DIR, f)); return { name: f, size: st.size, mtime: st.mtimeMs }; }).sort((a, b) => b.mtime - a.mtime); });
+  ipcMain.handle('backup:read', (e, name) => { if (!BK_RX.test(name)) throw new Error('ad'); return fs.readFileSync(path.join(BK_DIR, name), 'utf8'); });
+  ipcMain.handle('backup:snapshot', (e, json, why) => { ensureDir(BK_DIR); const n = 'once_' + String(why || 'geri').replace(/[^\w-]+/g, '') + '_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json'; fs.writeFileSync(path.join(BK_DIR, n), json, 'utf8'); return n; });
+  // ---- kabuk 3: hata günlüğü ve bilgi ----
+  ipcMain.handle('log:error', (e, text) => { logErr('arayüz: ' + text); return true; });
+  ipcMain.handle('log:read', () => { try { return fs.readFileSync(LOG_FILE, 'utf8').slice(-20000); } catch (e) { return ''; } });
+  ipcMain.handle('app:info', () => ({ shell: SHELL_VERSION, kabuk: KABUK_VER, electron: process.versions.electron, chrome: process.versions.chrome, os: os.type() + ' ' + os.release(), arch: process.arch, dataDir: DATA_DIR, host: os.hostname() }));
+  ipcMain.handle('data:open', () => { shell.openPath(DATA_DIR); return true; });
+  // ---- kabuk 3: çekirdeğin kendi kendini güncellemesi (boot.js geri dönüş korumalı) ----
+  const KABUK_FILES = ['main.js', 'preload.js', 'lan.js'];
+  const KSTATE = path.join(__dirname, 'kabuk-durum.json');
+  ipcMain.handle('kabuk:apply', (e, ver, files, hash) => {
+    if (!/^[\d.]+$/.test(String(ver))) throw new Error('surum');
+    const names = Object.keys(files || {}).filter((f) => KABUK_FILES.includes(f));
+    if (!names.includes('main.js')) throw new Error('paket eksik');
+    for (const f of names) { const tmp = path.join(__dirname, f + '.new'); fs.writeFileSync(tmp, Buffer.from(files[f], 'base64')); }
+    for (const f of names) { const cur = path.join(__dirname, f); if (fs.existsSync(cur)) fs.copyFileSync(cur, cur + '.prev'); }
+    for (const f of names) fs.renameSync(path.join(__dirname, f + '.new'), path.join(__dirname, f));
+    fs.writeFileSync(KSTATE, JSON.stringify({ version: String(ver), hash: String(hash || ''), files: names, pending: true, tries: 0, at: new Date().toISOString() }, null, 1));
+    return true;
+  });
+  ipcMain.handle('kabuk:ok', () => { try { const st = JSON.parse(fs.readFileSync(KSTATE, 'utf8')); if (st.pending) { st.pending = false; st.tries = 0; fs.writeFileSync(KSTATE, JSON.stringify(st, null, 1)); } return st; } catch (e) { return {}; } });
+  ipcMain.handle('kabuk:state', () => { try { return JSON.parse(fs.readFileSync(KSTATE, 'utf8')); } catch (e) { return {}; } });
+  // ---- kabuk 3: internetsiz ağ eşitlemesi ----
+  let LAN = null; const lanWait = new Map(); let lanSeq = 0;
+  const lan = () => { if (!LAN) LAN = require('./lan.js').createLan({ log: logErr, onRequest: (body, from) => new Promise((res, rej) => { const id = ++lanSeq; const tm = setTimeout(() => { lanWait.delete(id); rej(new Error('zaman aşımı')); }, 90000); lanWait.set(id, { res, rej, tm }); win.webContents.send('lan:req', id, body, from); }) }); return LAN; };
+  ipcMain.handle('lan:res', (e, id, text, err) => { const w = lanWait.get(id); if (!w) return false; clearTimeout(w.tm); lanWait.delete(id); if (err) w.rej(new Error(err)); else w.res(text); return true; });
+  ipcMain.handle('lan:start', (e, cfg) => lan().start(cfg));
+  ipcMain.handle('lan:stop', () => { if (LAN) LAN.stop(); return true; });
+  ipcMain.handle('lan:status', () => (LAN ? LAN.status() : { on: false }));
+  ipcMain.handle('lan:discover', (e, ms) => lan().discover(ms));
+  ipcMain.handle('lan:call', (e, host, port, method, pth, body) => lan().call(host, port, method, pth, body));
   ipcMain.handle('file:save', async (e, name, b64) => {
     const r = await dialog.showSaveDialog(win, { defaultPath: path.join(app.getPath('documents'), name) });
     if (r.canceled || !r.filePath) return null;
@@ -166,6 +213,8 @@ app.whenReady().then(() => {
     // eski paketleri temizle (etkin ve bir önceki kalır)
     try { for (const d of fs.readdirSync(OTA_DIR)) { if (d === 'state.json') continue; if (d !== st.current && d !== st.previous) fs.rmSync(path.join(OTA_DIR, d), { recursive: true, force: true }); } } catch (e) {}
     syncVersionNames(ACTIVE.version);
+    // kabuk 3: arayüz açıldıysa yeni çekirdek de sağlam demektir (boot.js geri dönüşü iptal)
+    try { const kf = path.join(__dirname, 'kabuk-durum.json'); const ks = JSON.parse(fs.readFileSync(kf, 'utf8')); if (ks.pending) { ks.pending = false; ks.tries = 0; fs.writeFileSync(kf, JSON.stringify(ks, null, 1)); } } catch (e) {}
     return true;
   });
   ipcMain.handle('ota:restart', () => { app.relaunch(); app.exit(0); });
