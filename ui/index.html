@@ -31,6 +31,7 @@
 <script src="js/source-i18n.js"></script>
 <script src="js/platform.js"></script>
 <script src="js/store.js"></script>
+<script src="js/kullanim.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/files.js"></script>
 <script src="js/updater.js"></script>
@@ -50,6 +51,9 @@
 <script src="js/offline-tr.js"></script>
 <script src="js/langguard.js"></script>
 <script src="js/gsearch.js"></script>
+<script>Kullanim.baslat({uygulama:'iha-mufredat',linkAc:function(u){try{Platform.openUrl(u)}catch(e){window.open(u,'_blank')}},bulut:true,ai:false,haric:['mufredat-bc0ad'],dil:function(){return document.documentElement.lang},proje:function(){try{var s=Store.local.sync;return s&&s.enabled&&s.config?s.config.projectId:''}catch(e){return ''}}});</script>
 <script>App.start();</script>
+<script src="js/duyuru.js"></script>
+<script>Duyuru.baslat({uygulama:"iha-mufredat",surum:String(window.APP_VERSION||"3.0"),dil:function(){return document.documentElement.lang}});</script>
 </body>
 </html>

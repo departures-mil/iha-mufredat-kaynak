@@ -1,6 +1,7 @@
 /* Arayüz metinleri — Türkçe / English / العربية */
 window.I18N = {
   tr: {
+    ortakKesildi: "Artık her kurum kendi ücretsiz Firebase hesabını kullanıyor. Kayıtlarınız bu cihazda duruyor; aşağıya kendi firebaseConfig ayarınızı yapıştırıp yeniden bağlanın.", kendiHesap: "Eşitleme kendi ücretsiz Firebase hesabınızla yapılır; kayıtlarınız ve günlük sınırınız yalnızca size aittir.", kendiHesapRehber: "Kendi Firebase hesabınızı kurun (rehber)",
     appName: 'İHA Müfredat Sistemi', appShort: 'İHA Müfredat',
     nav_dashboard: 'Panel', nav_curriculum: 'Müfredat', nav_students: 'Öğrenciler', nav_assess: 'Değerlendirme', nav_print: 'Çıktılar', nav_settings: 'Ayarlar', nav_help: 'Yardım',
     fullscreen: 'Tam ekran', windowed: 'Pencere görünümü', syncOff: 'Senkronizasyon kapalı', syncOn: 'Eşitlendi', syncBusy: 'Eşitleniyor…', syncErr: 'Senkronizasyon hatası', syncOffline: 'Çevrimdışı',
@@ -43,6 +44,7 @@ window.I18N = {
     dragHint: 'Sürükleyip bırakarak ya da oklarla yer değiştirebilirsiniz.', itemsCount: '{n} madde', modulesCount: '{n} modül',
   },
   en: {
+    ortakKesildi: "Every institution now uses its own free Firebase account. Your records stay on this device; paste your own firebaseConfig below and connect again.", kendiHesap: "Sync runs through your own free Firebase account; your records and daily quota belong only to you.", kendiHesapRehber: "Set up your own Firebase account (guide)",
     appName: 'UAV Curriculum System', appShort: 'UAV Curriculum',
     nav_dashboard: 'Dashboard', nav_curriculum: 'Curriculum', nav_students: 'Students', nav_assess: 'Assessment', nav_print: 'Printouts', nav_settings: 'Settings', nav_help: 'Help',
     fullscreen: 'Full screen', windowed: 'Window view', syncOff: 'Sync off', syncOn: 'Synced', syncBusy: 'Syncing…', syncErr: 'Sync error', syncOffline: 'Offline',
@@ -85,6 +87,7 @@ window.I18N = {
     dragHint: 'Drag and drop or use the arrows to reorder.', itemsCount: '{n} items', modulesCount: '{n} modules',
   },
   ar: {
+    ortakKesildi: "أصبحت كل مؤسسة تستخدم حساب Firebase المجاني الخاص بها. سجلاتك باقية على هذا الجهاز؛ الصق إعدادات firebaseConfig الخاصة بك أدناه واتصل من جديد.", kendiHesap: "تتم المزامنة عبر حساب Firebase المجاني الخاص بك؛ سجلاتك وحدّك اليومي لك وحدك.", kendiHesapRehber: "أنشئ حساب Firebase الخاص بك (دليل)",
     appName: 'نظام منهج الطائرات المسيّرة', appShort: 'منهج المسيّرات',
     nav_dashboard: 'اللوحة الرئيسية', nav_curriculum: 'المنهج', nav_students: 'المتدربون', nav_assess: 'التقييم', nav_print: 'المطبوعات', nav_settings: 'الإعدادات', nav_help: 'المساعدة',
     fullscreen: 'ملء الشاشة', windowed: 'عرض النافذة', syncOff: 'المزامنة متوقفة', syncOn: 'تمت المزامنة', syncBusy: 'جارٍ المزامنة…', syncErr: 'خطأ في المزامنة', syncOffline: 'غير متصل',

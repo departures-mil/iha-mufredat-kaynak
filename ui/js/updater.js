@@ -6,7 +6,7 @@
    guncellemeler/surum_X_Y/parcalar/{i}      : sıkıştırılmış arayüz paketinin parçaları
    Yalnız yönetici hesabı (FB_ADMIN_EMAIL) yazabilir. */
 (function () {
-  const C = window.FB_CONFIG;
+  const C = window.FB_YAYIN;   // 2.9: yöneticinin yayın projesi (kullanıcılar buradan okumaz)
   const BASE = 'https://firestore.googleapis.com/v1/projects/' + C.projectId + '/databases/(default)/documents/';
   const CHUNK = 700000;
   const vnum = (v) => { const [a, b] = String(v || '0').split('.').map((x) => parseInt(x, 10) || 0); return a * 1000 + b; };
@@ -40,7 +40,9 @@
   }
   async function fbLatest() { const m = await getDoc('guncellemeler/latest'); if (m) m.src = 'fb'; return m; }
   async function latest() {
-    const res = await Promise.allSettled([ghLatest(), fbLatest()]);
+    // 2.9: kullanıcılar yalnız GitHub'a bakar; Firebase yedek kanalı yalnız yönetici oturumunda okunur (yöneticinin kotası)
+    const yon = window.Sync && Sync.user && (Sync.user.email || '').toLowerCase() === String(window.FB_ADMIN_EMAIL || '').toLowerCase();
+    const res = await Promise.allSettled(yon ? [ghLatest(), fbLatest()] : [ghLatest()]);
     const ok = res.filter((r) => r.status === 'fulfilled' && r.value && r.value.version).map((r) => r.value);
     if (!ok.length) { const er = res.find((r) => r.status === 'rejected'); throw er ? er.reason : new Error('kanal'); }
     ok.sort((a, b) => vnum(b.version) - vnum(a.version) || (a.src === 'gh' ? -1 : 1));

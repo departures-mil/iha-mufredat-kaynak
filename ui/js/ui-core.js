@@ -361,14 +361,19 @@
       <div class="grid3"><label class="fl"><span>${t('workspace')}</span><input id="fbWs" dir="ltr" value="${esc(sy.workspace || 'iha-mufredat')}"></label><label class="fl"><span>${t('email')}</span><input id="fbEm" type="email" dir="ltr" value="${esc(sy.email || '')}"></label><label class="fl"><span>${t('password')}</span><input id="fbPw" type="password" dir="ltr"></label></div>
       <div class="row"><button class="btn pri" id="fbLogin">${icon('cloud')} ${t('login')}</button><button class="btn ghost" data-go-help="fb">${icon('help')} ${t('fbGuide')}</button></div>
       <p class="muted sm">${t('accountsHint')}</p>
-      <details class="adv"><summary>${t('advanced')}</summary><label class="fl"><span>${t('fbConfig')}</span><textarea id="fbCfg" rows="5" dir="ltr" placeholder="${esc(t('fbConfigPh'))}">${sy.config && sy.config.projectId !== FB_CONFIG.projectId ? esc(JSON.stringify(sy.config, null, 1)) : ''}</textarea></label><button class="btn sm ghost" id="fbPaste">${icon('copy')} ${t('pasteLink')}</button></details>` : `
+      ${sy.ortakKesildi ? `<p class="err">⚠ ${esc(t('ortakKesildi'))}</p>` : ''}
+      <p class="muted sm">${esc(t('kendiHesap'))} <a href="#" id="fbRehber">${esc(t('kendiHesapRehber'))}</a></p>
+      <details class="adv" open><summary>${t('advanced')}</summary><label class="fl"><span>${t('fbConfig')}</span><textarea id="fbCfg" rows="5" dir="ltr" placeholder="${esc(t('fbConfigPh'))}">${sy.config && sy.config.projectId !== FB_CONFIG.projectId ? esc(JSON.stringify(sy.config, null, 1)) : ''}</textarea></label><button class="btn sm ghost" id="fbPaste">${icon('copy')} ${t('pasteLink')}</button></details>` : `
       <div class="row"><button class="btn pri" id="fbNow">${icon('cloud')} ${t('syncNow')}</button><button class="btn" id="fbCopy">${icon('copy')} ${t('copyLink')}</button><button class="btn ghost danger" id="fbOut">${t('logout')}</button></div><p class="muted sm">${t('linkHelp')}</p>`}
     </div>
+    <div id="kulYer"></div>
     ${Contact.cardHtml()}
     <div class="card"><h3>${t('backup')}</h3><div class="row"><button class="btn" id="expBtn">${icon('dl')} ${t('exportData')}</button><label class="btn">${icon('ul')} ${t('importData')}<input type="file" accept=".json,application/json" id="impIn" hidden></label>${Platform.kind === 'desktop' ? `<button class="btn ghost" id="bkFolder">${t('openBackupFolder')}</button>` : ''}</div>${Platform.kind === 'desktop' ? `<p class="muted sm">${t('autoBackupInfo')}</p>` : ''}</div>
     ${Platform.kind === 'desktop' ? `<div class="card"><h3>${t('display')}</h3><p>${t('startFullscreen')}</p><button class="btn" id="fsToggle">${icon('win')} ${t('windowed')} / ${t('fullscreen')}</button></div>` : ''}
     <div class="card"><h3>${t('about')}</h3><p><b>${t('appName')}</b> — ${t('version')} <b>v${Platform.version}</b> (${Platform.kind})</p><p class="muted">${t('dataSafe')}</p></div>`;
     wireUpd(m); Contact.wire(m);
+    { const ky = $('#kulYer', m); if (ky && window.Kullanim) { const k = Kullanim.kart(); k.classList.add('card'); ky.replaceWith(k); } }
+    { const fr = $('#fbRehber', m); if (fr) fr.onclick = (e) => { e.preventDefault(); try { Platform.openUrl ? Platform.openUrl(FB_REHBER) : window.open(FB_REHBER, '_blank'); } catch (er) { window.open(FB_REHBER, '_blank'); } }; }
     $$('[data-lang]', m).forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));
     const cfgSave = () => Store.touch('config');
     const rkSave = () => Store.touch(Store.ranksPart());
