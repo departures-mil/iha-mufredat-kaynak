@@ -28,3 +28,9 @@ Firebase'de (`mufredat-bc0ad`) durur; **kayıtlar bu depoda bulunmaz**.
   Çekirdek 2 kurulumlar `kabukgec.js` ile tek seferlik geçiş betiğiyle (cmd + PowerShell) 3'e geçer; çekirdek 3'te doğrudan IPC.
 - `merge.js`: üç yönlü birleştirme; `sync.js` (bulut) ve `agesitle.js` (ağ) bunu kullanır. Ortak atalar ve çakışma kayıtları IndexedDB `iha-esitleme`.
 - `pencere.js` (sağ üst pencere düğmeleri), `pro.js` (açılış ekranı, yenilikler, hata raporu, kısayollar, yedekten geri yükleme, hakkında), `i18n-pro.js`, `changelog.js`.
+
+## 3.2 (2026-11-23)
+- Yapay zeka danışmanı: `ui/js/danisman.js` + `ui/css/danisman.css`. Sol menüde «Danışman» sayfası, Ayarlar'da «Yapay zeka danışmanı» kartı.
+  Sağlayıcılar (kullanıcının kendi anahtarı, akışlı): Gemini, OpenAI, Claude, Groq, OpenRouter; Ollama (bilgisayarda, internetsiz).
+  Bağlam: müfredat anahattı + ilgili modüller, yardım bölümleri, sözlük, kurum/puanlama ayarları, adı geçen/seçilen öğrencinin raporu.
+  İnternet ya da anahtar yoksa yerleşik çevrimdışı danışman. Kullanım `kullanim.js` ile sayılır (`index.html`: `ai:true`). Çekirdek değişmedi.
