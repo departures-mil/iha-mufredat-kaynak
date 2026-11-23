@@ -7,6 +7,7 @@
 <title>İHA Müfredat Sistemi</title>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/contact.css">
+<link rel="stylesheet" href="css/danisman.css">
 </head>
 <body>
 <div id="splash"><svg viewBox="0 0 64 64"><defs><linearGradient id="slg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4fc3f7"/><stop offset="1" stop-color="#1565c0"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#slg)"/><circle cx="32" cy="32" r="30" fill="none" stroke="#ffb74d" stroke-width="2.5" stroke-dasharray="4 5"/><path fill="#fff" d="M50 36v-3.5L35 23v-9.5c0-1.6-1.3-3-3-3s-3 1.4-3 3V23l-15 9.5V36l15-4.5V42l-4 3v2.5l7-2 7 2V45l-4-3V31.5z"/></svg><div class="st">İHA Müfredat Sistemi</div><div class="sb"><i></i></div></div>
@@ -61,7 +62,8 @@
 <script src="js/kabuk-paket.js"></script>
 <script src="js/kabukgec.js"></script>
 <script src="js/pro.js"></script>
-<script>Kullanim.baslat({uygulama:'iha-mufredat',linkAc:function(u){try{Platform.openUrl(u)}catch(e){window.open(u,'_blank')}},bulut:true,ai:false,haric:['mufredat-bc0ad'],dil:function(){return document.documentElement.lang},proje:function(){try{var s=Store.local.sync;return s&&s.enabled&&s.config?s.config.projectId:''}catch(e){return ''}}});</script>
+<script src="js/danisman.js"></script>
+<script>Kullanim.baslat({uygulama:'iha-mufredat',linkAc:function(u){try{Platform.openUrl(u)}catch(e){window.open(u,'_blank')}},bulut:true,ai:true,aiAd:function(){try{return Danisman.saglayiciAdi()}catch(e){return ''}},haric:['mufredat-bc0ad'],dil:function(){return document.documentElement.lang},proje:function(){try{var s=Store.local.sync;return s&&s.enabled&&s.config?s.config.projectId:''}catch(e){return ''}}});</script>
 <script>App.start();</script>
 <script src="js/duyuru.js"></script>
 <script>Duyuru.baslat({uygulama:"iha-mufredat",surum:String(window.APP_VERSION||"3.0"),dil:function(){return document.documentElement.lang}});</script>

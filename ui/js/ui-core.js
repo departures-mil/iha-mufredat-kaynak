@@ -108,6 +108,7 @@
     globe: 'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z',
     note: 'M3 18h12v-2H3v2zM3 6v2h18V6H3zm0 7h18v-2H3v2z', archive: 'M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z', copy: 'M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z',
     bolt: 'M7 2v11h3v9l7-12h-4l4-8z', flag: 'M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z', grip: 'M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+    spark: 'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z',
     menu: 'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z', translate: 'M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z',
   };
   const icon = (n, cls) => `<svg class="ic ${cls || ''}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[n] || ''}"/></svg>`;
@@ -174,7 +175,7 @@
   window.__onBack = () => { if (modals.length) { modals[modals.length - 1](); return true; } if (document.body.classList.contains('nav-open')) { document.body.classList.remove('nav-open'); return true; } return back(); };
 
   const PAGES = {};
-  const NAV = [['dashboard', 'dash', 'nav_dashboard'], ['curriculum', 'book', 'nav_curriculum'], ['students', 'users', 'nav_students'], ['assess', 'assess', 'nav_assess'], ['plans', 'cal', 'nav_plans'], ['print', 'print', 'nav_print'], ['settings', 'gear', 'nav_settings'], ['help', 'help', 'nav_help']];
+  const NAV = [['dashboard', 'dash', 'nav_dashboard'], ['curriculum', 'book', 'nav_curriculum'], ['students', 'users', 'nav_students'], ['assess', 'assess', 'nav_assess'], ['plans', 'cal', 'nav_plans'], ['print', 'print', 'nav_print'], ['danisman', 'spark', 'nav_danisman'], ['settings', 'gear', 'nav_settings'], ['help', 'help', 'nav_help']];
 
   function shell() {
     const L = lang();
@@ -370,11 +371,12 @@
     ${window.Lan ? Lan.cardHtml() : ''}
     ${window.Pro ? Pro.conflictCardHtml() : ''}
     <div id="kulYer"></div>
+    ${window.Danisman ? Danisman.cardHtml() : ''}
     <div class="card"><h3>${t('backup')}</h3><div class="row"><button class="btn" id="expBtn">${icon('dl')} ${t('exportData')}</button><label class="btn">${icon('ul')} ${t('importData')}<input type="file" accept=".json,application/json" id="impIn" hidden></label>${window.Pro ? Pro.backupExtraHtml() : ''}${Platform.kind === 'desktop' ? `<button class="btn ghost" id="bkFolder">${t('openBackupFolder')}</button>` : ''}</div>${Platform.kind === 'desktop' ? `<p class="muted sm">${t('autoBackupInfo')}</p>` : ''}</div>
     ${Platform.kind === 'desktop' ? `<div class="card"><h3>${t('display')}</h3><p>${t('startFullscreen')}</p><button class="btn" id="fsToggle">${icon('win')} ${t('windowed')} / ${t('fullscreen')}</button></div>` : ''}
     ${window.Pro ? Pro.aboutHtml() : `<div class="card"><h3>${t('about')}</h3><p><b>${t('appName')}</b> — ${t('version')} <b>v${Platform.version}</b> (${Platform.kind})</p><p class="muted">${t('dataSafe')}</p></div>`}
     ${Contact.cardHtml()}`;
-    wireUpd(m); Contact.wire(m); if (window.Pro) Pro.wire(m);
+    wireUpd(m); Contact.wire(m); if (window.Pro) Pro.wire(m); if (window.Danisman) Danisman.wire(m);
     { const ky = $('#kulYer', m); if (ky && window.Kullanim) { const k = Kullanim.kart(); k.classList.add('card'); ky.replaceWith(k); } }
     { const fr = $('#fbRehber', m); if (fr) fr.onclick = (e) => { e.preventDefault(); try { Platform.openUrl ? Platform.openUrl(FB_REHBER) : window.open(FB_REHBER, '_blank'); } catch (er) { window.open(FB_REHBER, '_blank'); } }; }
     $$('[data-lang]', m).forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));

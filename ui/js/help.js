@@ -50,7 +50,15 @@ tr: `
 <li>Her programın müfredatına konusuna özel seviye, modül ve madde eklenebilir; düzenlenebilir, sıralanabilir ve aç/kapat düğmesiyle etkisiz kılınabilir. Unvan koşulları ve uzmanlık yolları Ayarlar’da program bazında düzenlenir.</li>
 <li>Her öğrenci bir programa atanır (öğrenci formu → Eğitim programı). Öğrenci açıldığında uygulama otomatik olarak o öğrencinin programına geçer.</li></ul>
 <h3 id="contact">8. Yönetici iletişimi</h3>
-<ul><li><b>Ayarlar → Yönetici İletişimi</b> bölümünden fikir, öneri ve taleplerinizi doğrudan yöneticiye iletebilirsiniz. Bağlantı yoksa mesaj saklanır ve bağlantı gelince otomatik gönderilir.</li></ul>`,
+<ul><li><b>Ayarlar → Yönetici İletişimi</b> bölümünden fikir, öneri ve taleplerinizi doğrudan yöneticiye iletebilirsiniz. Bağlantı yoksa mesaj saklanır ve bağlantı gelince otomatik gönderilir.</li></ul>
+<h3 id="danisman">Yapay zeka danışmanı</h3>
+<p>Sol menüdeki <b>Danışman</b> sayfasında müfredat, ders planlama, öğrenci gelişimi, atölye/uçuş güvenliği ve İHA teknolojileri hakkında soru sorabilirsiniz. Danışman cevap verirken kurumunuzun müfredatını, bu yardım metnini ve (sorduysanız ya da sohbete eklediyseniz) öğrencinin kayıtlarını bağlam olarak kullanır.</p>
+<ul><li><b>Kendi hesabınız:</b> Ayarlar → Yapay zeka danışmanı bölümünden sağlayıcıyı seçip (Gemini ve Groq ücretsiz katman sunar) «Ücretsiz anahtar al» ile aldığınız anahtarı yapıştırın. Anahtar yalnız bu cihazda saklanır; istekler doğrudan sağlayıcıya gider ve kullanım Kullanım Limitleri kartında sayılır.</li>
+<li><b>Bilgisayarda çalışan model:</b> Ollama kuruluysa sağlayıcı olarak Ollama'yı seçin; internet gerekmez.</li>
+<li><b>Çevrimdışı danışman:</b> internet ya da anahtar yoksa cevaplar müfredat, yardım ve öğrenci kayıtlarından derlenir (ilgili konular, sonraki adımlar, terimler).</li>
+<li>Sohbete bir öğrenci eklerseniz danışman o öğrencinin seviye durumunu, eksik maddelerini ve değerlendirmelerini görür; «X öğrencisi için sonraki adım ne?» gibi sorular sorabilirsiniz.</li>
+<li>Cevaplar öneri niteliğindedir; güvenlik konularında her zaman kontrol listelerini ve mevzuatı esas alın.</li></ul>
+`,
 en: `
 <h3 id="ped">0. The curriculum system (pedagogy)</h3>
 <p>The curriculum has 13 levels and 93 modules; each level builds on the previous one and the next level starts only after the end-of-level evaluation is passed. Levels 0–8 are the common core for everyone; levels 9–11 are specializations and level 12 is graduation. Modules marked “added” were added for completeness.</p>
@@ -101,7 +109,15 @@ en: `
 <li>Each programme's curriculum can be extended with topic-specific levels, modules and items, which can be edited, reordered and disabled with the on/off switch. Rank conditions and specialisation paths are edited per programme in Settings.</li>
 <li>Every student is assigned to a programme (student form → Training programme). Opening a student switches the app to that student's programme automatically.</li></ul>
 <h3 id="contact">8. Contacting the administrator</h3>
-<ul><li>Use <b>Settings → Contact the Administrator</b> to send ideas, suggestions and requests directly to the administrator. Without a connection the message is kept and sent automatically later.</li></ul>`,
+<ul><li>Use <b>Settings → Contact the Administrator</b> to send ideas, suggestions and requests directly to the administrator. Without a connection the message is kept and sent automatically later.</li></ul>
+<h3 id="danisman">AI advisor</h3>
+<p>On the <b>Advisor</b> page in the left menu you can ask about the curriculum, lesson planning, student progress, workshop/flight safety and UAV technology. When answering, the advisor uses your institution's curriculum, this help text and (if you asked about or attached one) the student's records as context.</p>
+<ul><li><b>Your own account:</b> under Settings → AI advisor choose a provider (Gemini and Groq offer a free tier), get a key with «Get a free key» and paste it. The key is stored only on this device; requests go straight to the provider and usage is counted in the Usage limits card.</li>
+<li><b>Model on this computer:</b> if Ollama is installed, choose Ollama as the provider; no internet is needed.</li>
+<li><b>Offline advisor:</b> without internet or a key, answers are compiled from the curriculum, the help text and student records (related topics, next steps, terms).</li>
+<li>If you attach a student to the chat, the advisor sees that student's level status, missing items and assessments; you can ask things like «What is the next step for student X?».</li>
+<li>Answers are suggestions; for safety always follow the checklists and regulations.</li></ul>
+`,
 ar: `
 <h3 id="ped">0. نظام المنهج (الأسس التربوية)</h3>
 <p>يتكون المنهج من 13 مستوى و93 وحدة؛ يُبنى كل مستوى على سابقه ولا يُنتقل إلى التالي قبل اجتياز تقييم نهاية المستوى. المستويات 0–8 جذع مشترك للجميع، و9–11 تخصصات، و12 مرحلة التخرج. الوحدات المعلَّمة «مضاف» أُضيفت لاستكمال المنهج.</p>
@@ -152,5 +168,13 @@ ar: `
 <li>يمكن إضافة مستويات ووحدات وبنود خاصة بموضوع كل برنامج وتعديلها وترتيبها وإيقافها بمفتاح التشغيل. وتُعدَّل شروط الألقاب ومسارات التخصص لكل برنامج من الإعدادات.</li>
 <li>يُسند كل متدرب إلى برنامج (نموذج المتدرب ← البرنامج التدريبي). وعند فتح متدرب ينتقل التطبيق تلقائياً إلى برنامجه.</li></ul>
 <h3 id="contact">8. التواصل مع المسؤول</h3>
-<ul><li>من <b>الإعدادات ← التواصل مع المسؤول</b> يمكنكم إرسال أفكاركم ومقترحاتكم وطلباتكم مباشرة إلى المسؤول. وعند انعدام الاتصال تُحفظ الرسالة وتُرسل تلقائياً لاحقاً.</li></ul>`
+<ul><li>من <b>الإعدادات ← التواصل مع المسؤول</b> يمكنكم إرسال أفكاركم ومقترحاتكم وطلباتكم مباشرة إلى المسؤول. وعند انعدام الاتصال تُحفظ الرسالة وتُرسل تلقائياً لاحقاً.</li></ul>
+<h3 id="danisman">المستشار الذكي</h3>
+<p>في صفحة <b>المستشار</b> من القائمة اليسرى يمكنك السؤال عن المنهج وتخطيط الدروس وتقدّم الطلاب وسلامة الورشة/الطيران وتقنيات الطائرات المسيّرة. يستخدم المستشار عند الإجابة منهج مؤسستك ونص المساعدة هذا وسجلات الطالب (إذا سألت عنه أو أرفقته بالمحادثة) كسياق.</p>
+<ul><li><b>حسابك الخاص:</b> من الإعدادات → المستشار الذكي اختر المزوّد (يقدّم Gemini وGroq فئة مجانية)، واحصل على مفتاح عبر «احصل على مفتاح مجاني» والصقه. يُحفظ المفتاح على هذا الجهاز فقط؛ تذهب الطلبات مباشرة إلى المزوّد ويُحسب الاستخدام في بطاقة حدود الاستخدام.</li>
+<li><b>نموذج على هذا الحاسوب:</b> إذا كان Ollama مثبتًا فاختره كمزوّد؛ لا حاجة إلى إنترنت.</li>
+<li><b>المستشار دون اتصال:</b> دون إنترنت أو مفتاح تُجمع الإجابات من المنهج ونص المساعدة وسجلات الطلاب (المواضيع ذات الصلة، الخطوات التالية، المصطلحات).</li>
+<li>إذا أرفقت طالبًا بالمحادثة يرى المستشار حالة مستوياته وبنوده الناقصة وتقييماته؛ يمكنك السؤال مثل «ما الخطوة التالية للطالب فلان؟».</li>
+<li>الإجابات اقتراحات؛ في مواضيع السلامة التزم دائمًا بقوائم التحقق والتشريعات.</li></ul>
+`
 };
