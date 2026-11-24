@@ -47,7 +47,7 @@
       const s = Store.local.sync;
       if (s && !s.config && window.FB_CONFIG && window.FB_CONFIG.apiKey) s.config = window.FB_CONFIG;
       // 2.9: eski ortak projeden çıkış — yalnız yönetici hesabı orada kalır
-      if (s && s.config && window.FB_YAYIN && s.config.projectId === window.FB_YAYIN.projectId && String(s.email || '').toLowerCase() !== String(window.FB_ADMIN_EMAIL || '').toLowerCase()) {
+      if (s && s.config && window.FB_YAYIN && s.config.projectId === window.FB_YAYIN.projectId && !window.fbYoneticiMi(s.email)) {
         Object.assign(s, { enabled: false, config: null, ortakKesildi: true }); delete s.cred; Store.saveLocal();
       }
       if (!s || !s.enabled || !s.config || !s.workspace) { this.setState('off'); return; }
