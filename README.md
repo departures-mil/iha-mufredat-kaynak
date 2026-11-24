@@ -34,3 +34,8 @@ Firebase'de (`mufredat-bc0ad`) durur; **kayıtlar bu depoda bulunmaz**.
   Sağlayıcılar (kullanıcının kendi anahtarı, akışlı): Gemini, OpenAI, Claude, Groq, OpenRouter; Ollama (bilgisayarda, internetsiz).
   Bağlam: müfredat anahattı + ilgili modüller, yardım bölümleri, sözlük, kurum/puanlama ayarları, adı geçen/seçilen öğrencinin raporu.
   İnternet ya da anahtar yoksa yerleşik çevrimdışı danışman. Kullanım `kullanim.js` ile sayılır (`index.html`: `ai:true`). Çekirdek değişmedi.
+
+## 3.3 (2026-11-24)
+- ✦ Asistan Agent: `ui/js/fc-agent.js` (= ortak-cekirdek/web/dist/fc-agent.js) + `ui/js/agent-baslat.js`. Bütün programlardaki çalışmayı
+  sayılarla izler, çevrim dışı kurallar + danışmandaki kullanıcının kendi anahtarıyla öneri; bildirim + ✦ panel; Ayarlar'da
+  "Yönetici İletişimi" kartının önünde. Çekirdek değişmedi (ortak sayaç klasörü çekirdek ortak çekirdeğe geçince gelir).
