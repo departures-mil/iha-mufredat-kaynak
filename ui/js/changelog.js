@@ -1,5 +1,12 @@
 /* Sürüm notları — "Yenilikler" penceresi ve Ayarlar › Hakkında */
 window.CHANGELOG = [
+  { v: '3.4.5',
+    tr: ['Güncellemeler artık tamamen kendiliğinden: yeni sürüm arka planda sessizce indirilir, program kapanınca pencere açmadan kurulur; bir sonraki açılışta yeni sürüm gelir. Hemen kurmak isterseniz Güncelle → «Şimdi kur ve yeniden aç».',
+      'Kurulum gerektiren güncellemeler de sessiz yapılır, kurulum penceresi çıkmaz. Kayıtlara dokunulmaz.'],
+    en: ['Updates are now fully automatic: the new version downloads quietly in the background and installs without any window when the program closes; the next start opens the new version. To install right away: Update → «Install now and reopen».',
+      'Updates that need the installer also run silently, no setup window appears. Records are not touched.'],
+    ar: ['أصبحت التحديثات تلقائية بالكامل: يُنزَّل الإصدار الجديد بهدوء في الخلفية ويُثبَّت دون أي نافذة عند إغلاق البرنامج، ويُفتح الإصدار الجديد في المرة التالية. للتثبيت فوراً: تحديث ← «ثبّت الآن وأعد الفتح».',
+      'التحديثات التي تحتاج إلى برنامج التثبيت تتم بصمت أيضاً دون ظهور نافذة. لا تُمَسّ السجلات.'] },
   { v: '3.4.4',
     tr: ['Güncelle\'ye basınca siyah komut pencereleri açılıp güncellemenin takılması düzeltildi: güncelleme artık hiçbir pencere açmadan arka planda yapılır, program kendiliğinden yeni sürümle açılır.',
       'Kapanması gecikirse program bekletilmez, güncelleme yine tamamlanır. Bir sorun olursa eski sürüm geri konur. Kayıtlara dokunulmaz.'],
