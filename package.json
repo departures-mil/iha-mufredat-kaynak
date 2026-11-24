@@ -1,0 +1,75 @@
+{
+  "name": "iha-mufredat-sistemi",
+  "productName": "IHA Mufredat Sistemi",
+  "version": "3.4.0",
+  "description": "İHA eğitim müfredatı, öğrenci takibi ve ders planı programı",
+  "main": "kabuk/main.js",
+  "author": "departures-mil",
+  "license": "UNLICENSED",
+  "repository": "departures-mil/iha-mufredat-kaynak",
+  "scripts": {
+    "start": "electron .",
+    "surum": "node araclar/surum.js",
+    "test": "node araclar/surum.js --check && node --test test/app.test.js test/electron-smoke.test.js",
+    "test:electron": "node --test test/electron-smoke.test.js",
+    "dist": "electron-builder --win nsis --x64 --publish never",
+    "eski-kanal": "node araclar/eski-kanal.js",
+    "ekran": "node araclar/ekran.js"
+  },
+  "build": {
+    "appId": "com.departuresmil.ihamufredat",
+    "productName": "IHA Mufredat Sistemi",
+    "copyright": "departures-mil",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "package.json",
+      "kabuk/main.js",
+      "kabuk/preload.js",
+      "kabuk/lan.js",
+      "kabuk/icon.ico",
+      "cekirdek/**/*",
+      "ui/**/*"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "kabuk/icon.ico",
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "İHA Müfredat Sistemi",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "kabuk/icon.ico",
+      "uninstallerIcon": "kabuk/icon.ico",
+      "include": "build/kurulum.nsh",
+      "multiLanguageInstaller": true,
+      "installerLanguages": [
+        "tr_TR",
+        "en_US",
+        "ar_SA"
+      ],
+      "language": "1055",
+      "artifactName": "IhaMufredat-Setup-${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0"
+  }
+}

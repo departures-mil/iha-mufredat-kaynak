@@ -46,7 +46,9 @@
       if (seen.has(k)) return; seen.add(k);
       const inB = B.has(k), inM = M.has(k), inT = T.has(k);
       if (inM && inT) { const r = merge3(B.get(k), M.get(k), T.get(k), ctx, path.concat('#' + k)); if (r !== undefined) out.push(r); }
-      else if (inM) { if (!inB || !eq(B.get(k), M.get(k))) out.push(M.get(k)); }   // öbür tarafta silinmiş ve burada değişmemişse silinir
+      else if (inM) {
+        if (!inB || !eq(B.get(k), M.get(k))) out.push(M.get(k));   // öbür tarafta silinmiş: sonuçtan kalkar, setRec ARŞİVE yazar
+      }
       else if (inT) { if (!inB || !eq(B.get(k), T.get(k))) out.push(T.get(k)); }
     };
     // sıra: bu cihazın sırası, öbür taraftaki yeni öğeler kendi komşularının yanına
@@ -71,7 +73,20 @@
     if (key.startsWith('curriculum_')) return (d.curricula || {})[key.slice(11)];
     return undefined;
   }
+  /* 3.4 (ortak kural: hiçbir veri kalıcı silinmez): eşitlemeyle gelen kayıt yerel kaydın yerine konmadan önce, yerelde olup
+     yenisinde olmayan liste öğeleri (öbür cihazda silinenler) "Çakışma kayıtları"na removed:true ile yazılır; oradan
+     "geri al" öğeyi listeye geri koyar. Bütün eşitleme yolları (bulut, ağ, ilk eşitleme) kaydı setRec ile uygular. */
+  function removedItems(a, b, path, out) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      const nb = new Map(b.map((e) => [ekey(e), e]));
+      a.forEach((e) => { const k = ekey(e); if (!nb.has(k)) { if (isObj(e) && e.id != null) out.push({ path: path.concat('#' + k), kept: null, lost: e, removed: true }); } else removedItems(e, nb.get(k), path.concat('#' + k), out); });
+    } else if (isObj(a) && isObj(b)) {
+      for (const k of Object.keys(a)) if (k in b) removedItems(a[k], b[k], path.concat(k), out);
+    }
+    return out;
+  }
   function setRec(key, obj) {
+    try { const prev = getRec(key); if (prev && obj) { const lost = removedItems(prev, obj, [], []); if (lost.length) logConflicts(key, obj, lost, 'arsiv'); } } catch (e) { console.warn('arsiv', e); }
     const d = Store.db;
     if (key.startsWith('student:')) { d.students[key.slice(8)] = obj; return; }
     if (key === 'plans') { obj.list = obj.list || {}; d.plans = obj; return; }
@@ -121,7 +136,7 @@
   async function logConflicts(key, rec, list, src) {
     if (!list.length) return;
     const t = Date.now();
-    try { await tx('log', 'readwrite', (s) => { list.slice(0, 50).forEach((c) => s.add({ t, key, name: label(key, rec), src, path: c.path, kept: c.kept, lost: c.lost })); }); } catch (e) { console.warn(e); }
+    try { await tx('log', 'readwrite', (s) => { list.slice(0, 200).forEach((c) => s.add(Object.assign({ t, key, name: label(key, rec), src, path: c.path, kept: c.kept, lost: c.lost }, c.removed ? { removed: true } : {}))); }); } catch (e) { console.warn(e); }
     try { const all = await conflicts(); if (all.length > 300) await tx('log', 'readwrite', (s) => all.slice(300).forEach((x) => s.delete(x.id))); } catch (e) {}
     listeners.forEach((f) => { try { f(); } catch (e) {} });
   }
@@ -142,7 +157,12 @@
       if (seg[0] === '#' && Array.isArray(o)) { const k = seg.slice(1); const nx = o.find((e) => ekey(e) === k); if (!nx) return false; o = nx; }
       else { if (o[seg] == null || typeof o[seg] !== 'object') o[seg] = {}; o = o[seg]; }
     }
-    const last = P[P.length - 1]; if (last == null || last[0] === '#') return false;
+    const last = P[P.length - 1];
+    if (c.removed && last && last[0] === '#' && Array.isArray(o)) { // 3.4: öbür cihazda silinmiş liste öğesini geri koy
+      if (!o.some((e) => ekey(e) === last.slice(1))) o.push(JSON.parse(JSON.stringify(c.lost)));
+      Store.touch(c.key); return true;
+    }
+    if (last == null || last[0] === '#') return false;
     o[last] = c.lost;
     Store.touch(c.key);
     return true;

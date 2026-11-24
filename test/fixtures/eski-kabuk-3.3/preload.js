@@ -1,0 +1,53 @@
+/* Masaüstü köprüsü: arayüzün güvenli biçimde dosya, yazdırma ve pencere işlemlerine erişmesi */
+const { contextBridge, ipcRenderer } = require('electron');
+contextBridge.exposeInMainWorld('desktop', {
+  saveDb: (json) => ipcRenderer.invoke('db:save', json),
+  loadDb: () => ipcRenderer.invoke('db:load'),
+  saveFile: (name, b64) => ipcRenderer.invoke('file:save', name, b64),
+  openFile: (name, b64) => ipcRenderer.invoke('file:open', name, b64),
+  openUrl: (url) => ipcRenderer.invoke('url:open', url),
+  print: (html, o) => ipcRenderer.invoke('print:html', html, o),
+  savePdf: (html, name, o) => ipcRenderer.invoke('print:pdf', html, name, o),
+  toggleFullscreen: () => ipcRenderer.invoke('win:toggleFs'),
+  isFullscreen: () => ipcRenderer.invoke('win:isFs'),
+  onFullscreen: (cb) => ipcRenderer.on('fs-changed', (e, v) => cb(v)),
+  httpGet: (url) => ipcRenderer.invoke('http:get', url),
+  openBackupFolder: () => ipcRenderer.invoke('backup:open'),
+  quit: () => ipcRenderer.invoke('app:quit'),
+  // kabuk 3
+  shellVersion: 3,
+  minimize: () => ipcRenderer.invoke('win:min'),
+  toggleMaximize: () => ipcRenderer.invoke('win:max'),
+  winState: () => ipcRenderer.invoke('win:state'),
+  onWinState: (cb) => ipcRenderer.on('win-state', (e, v) => cb(v)),
+  backups: {
+    list: () => ipcRenderer.invoke('backup:list'),
+    read: (n) => ipcRenderer.invoke('backup:read', n),
+    snapshot: (json, why) => ipcRenderer.invoke('backup:snapshot', json, why),
+  },
+  logError: (text) => ipcRenderer.invoke('log:error', text),
+  readLog: () => ipcRenderer.invoke('log:read'),
+  appInfo: () => ipcRenderer.invoke('app:info'),
+  openDataFolder: () => ipcRenderer.invoke('data:open'),
+  kabuk: {
+    apply: (ver, files, hash) => ipcRenderer.invoke('kabuk:apply', ver, files, hash),
+    ok: () => ipcRenderer.invoke('kabuk:ok'),
+    state: () => ipcRenderer.invoke('kabuk:state'),
+  },
+  lan: {
+    start: (cfg) => ipcRenderer.invoke('lan:start', cfg),
+    stop: () => ipcRenderer.invoke('lan:stop'),
+    status: () => ipcRenderer.invoke('lan:status'),
+    discover: (ms) => ipcRenderer.invoke('lan:discover', ms),
+    call: (host, port, method, pth, body) => ipcRenderer.invoke('lan:call', host, port, method, pth, body),
+    onRequest: (cb) => ipcRenderer.on('lan:req', async (e, id, body, from) => { try { const out = await cb(body, from); ipcRenderer.invoke('lan:res', id, out, null); } catch (er) { ipcRenderer.invoke('lan:res', id, null, String((er && er.message) || er)); } }),
+  },
+  ota: {
+    info: () => ipcRenderer.invoke('ota:info'),
+    begin: (v) => ipcRenderer.invoke('ota:begin', v),
+    write: (v, rel, b64) => ipcRenderer.invoke('ota:write', v, rel, b64),
+    commit: (v) => ipcRenderer.invoke('ota:commit', v),
+    bootOk: () => ipcRenderer.invoke('ota:bootOk'),
+    restart: () => ipcRenderer.invoke('ota:restart'),
+  },
+});

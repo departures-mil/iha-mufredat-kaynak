@@ -1,11 +1,12 @@
 /* İHA Müfredat Sistemi — havacılık teması */
 :root{
-  --bg0:#061327;--bg1:#0a2244;--bg2:#103a6b;
-  --panel:rgba(12,32,62,.78);--panel2:rgba(18,46,86,.72);--line:rgba(130,190,255,.18);--line2:rgba(130,190,255,.32);
-  --tx:#e8f1fb;--tx2:#a9bfd6;--tx3:#7f97b2;
-  --sky:#4fc3f7;--blue:#2196f3;--orange:#ffa726;--amber:#ffca28;--green:#66bb6a;--red:#ef5350;
-  --r:14px;--sh:0 10px 30px rgba(0,0,0,.35);
-  --font:'Segoe UI','Inter',Tahoma,'Noto Sans','Noto Sans Arabic',Arial,sans-serif;
+  /* 3.4: renkler ortak çekirdek tokenlarından gelir (şema + açık/koyu). 3.3'e kadarki renkler "klasik" şemada (js/kabuk.js). */
+  --bg0:var(--bg);--bg1:var(--bg);--bg2:var(--bg);
+  --panel2:var(--panel-hover);--line:var(--border);--line2:var(--border-strong);
+  --tx:var(--text);--tx2:var(--label);--tx3:var(--muted);
+  --sky:var(--accent);--blue:var(--primary-1);--orange:#ffa726;--amber:var(--warn);--green:var(--ok);--red:var(--danger);
+  --r:14px;--sh:var(--shadow-pop);
+  --font:var(--font-ui);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
