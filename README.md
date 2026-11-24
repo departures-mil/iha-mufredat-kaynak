@@ -1,41 +1,22 @@
 # İHA Müfredat Sistemi — kaynak
 
-Windows masaüstü programı (Electron). Kayıtlar kullanıcının bilgisayarında (`%APPDATA%\IHAMufredatSistemi`) ve
-Firebase'de (`mufredat-bc0ad`) durur; **kayıtlar bu depoda bulunmaz**.
+Windows masaüstü programı (Electron, kurulumlu). Kayıtlar kullanıcının bilgisayarında (`%APPDATA%\IHAMufredatSistemi`) ve
+kullanıcının KENDİ Firebase hesabında durur; **kayıtlar bu depoda bulunmaz**.
 
-- `kabuk/` — kurulu programın `resources\app` kabuğu (main.js, preload.js; kabuk sürümü 2).
-- `ui/` — arayüz (uygulama içi güncellemeyle değişen kısım). `ui/vendor/` kabukla gelir, pakete girmez.
-- Güncelleme kanalı: `departures-mil/iha-mufredat-guncelleme` (latest.json + paketler/iha_X_Y.b64). 2.8'den itibaren
-  program önce GitHub'a, sonra Firebase'e bakar; hangisi yeniyse onu kurar.
+- `kabuk/` — ana süreç (`main.js`, `preload.js`, internetsiz ağ eşitlemesi `lan.js`, simge).
+- `ui/` — arayüz (düz JS). `ui/cekirdek/` + `cekirdek/` = ortak çekirdek kopyası (commit `cekirdek/VERSION`), yapıştırıcı `ui/js/kabuk.js`,
+  uyum CSS'i `ui/css/fc-uyum.css`.
+- Güncelleme: **yalnız GitHub Releases** (bu depo): `latest.json` + FCD1 yama; kanallar `win-app` (app.asar) ve `win-setup` (NSIS).
+- Eski kanal (`departures-mil/iha-mufredat-guncelleme`, raw latest.json + paketler/*.b64) yalnız ≤3.3 kurulumların köprüsüdür.
 
 ## Yeni sürüm
-1. `ui/` içinde değişikliği yap.
-2. `python3 araclar/yayinla.py 2.9 "tr notu" "en note" "ar ملاحظة" --kanal ../iha-mufredat-guncelleme`
-3. İki depoda: `git add -A && git commit -m "İHA 2.9" && git push`
-4. `cikti/paket.ihu` yayın klasörüne (`Downloads\IHA-Yayin`) konursa yönetici oturumundaki program Firebase yedek kanalına da yükler.
+1. `ui/js/changelog.js` en üstüne `{ v: 'X.Y.Z', tr: [...], en: [...], ar: [...] }`, sonra `node araclar/surum.js X.Y.Z`.
+2. `npm test` (Electron testleri için Linux'ta xvfb).
+3. main'e birleştir → `gh api -X POST repos/departures-mil/iha-mufredat-kaynak/actions/workflows/release.yml/dispatches -f ref=main`.
 
-## 3.0 (2026-11-22)
-- 2.9'daki admin duyuruları (yalnız pakette vardı) kaynağa alındı.
-- Ayarlar > Kullanım Limitleri (`ui/js/kullanim.js` = duyurular/istemci/kullanim.js); SDK sayımı `sync.js` içinde.
-- Programla gelen ortak Firebase projesi kaldırıldı (`FB_CONFIG = {}`); eski projede (`FB_YAYIN`) yalnız yönetici kalır.
-  Kullanıcılar güncellemeye yalnız GitHub'dan bakar; Firebase yedek kanalını yalnız yönetici oturumu okur.
-
-## 3.1 (2026-11-22)
-- Çekirdek 3 (`kabuk/`): `boot.js` açılış koruyucusu (yeni çekirdek açılmazsa `.prev`'e döner), `lan.js` internetsiz eşitleme
-  (TCP 47811…, UDP 47812, HMAC imzalı), pencere düğmeleri (win:min / win:max), yedekten geri dönüş (backup:*), hata günlüğü,
-  `kabuk:apply` ile uygulama içinden çekirdek güncellemesi. `package.json` → `main: boot.js`.
-- `araclar/kabuk_paket.py`: çekirdek dosyalarını `ui/js/kabuk-paket.js` içine gömer (yayinla.py kendisi çağırır).
-  Çekirdek 2 kurulumlar `kabukgec.js` ile tek seferlik geçiş betiğiyle (cmd + PowerShell) 3'e geçer; çekirdek 3'te doğrudan IPC.
-- `merge.js`: üç yönlü birleştirme; `sync.js` (bulut) ve `agesitle.js` (ağ) bunu kullanır. Ortak atalar ve çakışma kayıtları IndexedDB `iha-esitleme`.
-- `pencere.js` (sağ üst pencere düğmeleri), `pro.js` (açılış ekranı, yenilikler, hata raporu, kısayollar, yedekten geri yükleme, hakkında), `i18n-pro.js`, `changelog.js`.
-
-## 3.2 (2026-11-23)
-- Yapay zeka danışmanı: `ui/js/danisman.js` + `ui/css/danisman.css`. Sol menüde «Danışman» sayfası, Ayarlar'da «Yapay zeka danışmanı» kartı.
-  Sağlayıcılar (kullanıcının kendi anahtarı, akışlı): Gemini, OpenAI, Claude, Groq, OpenRouter; Ollama (bilgisayarda, internetsiz).
-  Bağlam: müfredat anahattı + ilgili modüller, yardım bölümleri, sözlük, kurum/puanlama ayarları, adı geçen/seçilen öğrencinin raporu.
-  İnternet ya da anahtar yoksa yerleşik çevrimdışı danışman. Kullanım `kullanim.js` ile sayılır (`index.html`: `ai:true`). Çekirdek değişmedi.
-
-## 3.3 (2026-11-24)
-- ✦ Asistan Agent: `ui/js/fc-agent.js` (= ortak-cekirdek/web/dist/fc-agent.js) + `ui/js/agent-baslat.js`. Bütün programlardaki çalışmayı
-  sayılarla izler, çevrim dışı kurallar + danışmandaki kullanıcının kendi anahtarıyla öneri; bildirim + ✦ panel; Ayarlar'da
-  "Yönetici İletişimi" kartının önünde. Çekirdek değişmedi (ortak sayaç klasörü çekirdek ortak çekirdeğe geçince gelir).
+## 3.4.0 (2026-11-24) — ortak çekirdek
+NSIS kurulum (kullanıcı başına, tek tık, tr/en/ar), her açılışta tam ekran, sağ üst Eşitle · Wi‑Fi · Güncelle · tema · dil | Küçült · Orta ·
+Tam ekran · Kapat, Falcon şeması + şema seçici (eski görünüm `klasik`), açık tema, yazı boyutu, ilk açılış rehberi, neler yeni, Admin ile
+iletişim (çekirdek gelen kutusu, Ayarlar'ın EN SONUNDA), çökme raporu, Kullanım Limitleri, Asistan Agent (çekirdek `FC.agent`), Arşiv.
+Eşitleme kuralı: öbür cihazda silinen liste öğeleri `Çakışma kayıtları`na (arşiv) yazılır, silinen öğrenci/plan Arşiv kartından geri alınır.
+Eski kabuk 2/3 kurulumları eski kanaldan 3.4 köprü paketini alır ve "Yeni kurulum gerekli" penceresiyle kuruluma geçer.

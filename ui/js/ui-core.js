@@ -72,7 +72,7 @@
     Store.local.lang = m;
     const pr = Store.local.ui.print; if (pr) { pr.lang = m.split('-')[0]; pr.lang2 = m.includes('-') ? m.split('-')[1] : ''; } // çıktılar varsayılan olarak aynı dil çiftiyle
     document.querySelectorAll('.modal-wrap').forEach((w) => w.remove()); // açık pencereler eski dilde kalmasın
-    Store.saveLocal(); shell(); render();
+    Store.saveLocal(); if (window.Kabuk) Kabuk.langChanged(m); shell(); render();
   }
 
   /* ---------- simgeler ---------- */
@@ -190,11 +190,6 @@
         <div class="gsearch" id="gsWrap"></div>
         <div class="progsel p-${Store.prog}" title="${t('program')}">${icon('plane')}<select id="progSel">${Store.PROGS.map((p) => `<option value="${p}" ${p === Store.prog ? 'selected' : ''}>${t('prog_' + p)}</option>`).join('')}</select></div>
         <div class="langsel">${icon('globe')}<select id="langSel">${MODES.map((l) => `<option value="${l}" ${l === mode() ? 'selected' : ''}>${modeName(l)}</option>`).join('')}</select></div>
-        <div class="tbact">
-          <button class="tbb sync" id="syncChip">${icon('sync')}<span class="tl"></span></button>
-          <button class="tbb upd" id="updChip">${icon('dl')}<span class="tl"></span><i class="dot"></i></button>
-        </div>
-        ${Platform.kind === 'desktop' ? '<div class="winctl" id="winctl"></div>' : ''}
       </header>
       <nav class="sidebar">${NAV.map(([p, ic, k]) => `<a class="nav" data-go="${p}">${icon(ic)}<span>${t(k)}</span></a>`).join('')}
         <div class="navfoot">${icon('plane', 'big')}<div>${t('dataSafe')}</div></div></nav>
@@ -206,11 +201,7 @@
     $('#burger').onclick = () => document.body.classList.toggle('nav-open');
     $('#scrim').onclick = () => document.body.classList.remove('nav-open');
     $('#brand').onclick = () => go('dashboard');
-    $('#syncChip').onclick = () => syncClick();
-    $('#syncChip').oncontextmenu = (e) => { e.preventDefault(); go('settings', { anchor: 'sync' }); };
-    $('#updChip').onclick = () => updClick();
-    updChip();
-    if (window.WinCtl) WinCtl.mount($('#winctl')); // v3.1: küçült · tam ekran ⇄ pencere · kapat
+    if (window.Kabuk) Kabuk.topbar($('.topbar')); // 3.4: ortak çekirdek üst çubuğu (Eşitle · Wi-Fi · Güncelle · tema · dil | pencere)
     $$('[data-go]').forEach((a) => (a.onclick = () => go(a.dataset.go)));
     syncChip();
     if (window.GSearch) GSearch.mount();
@@ -347,7 +338,6 @@
     const RK = Store.ranks(); const PT = Store.paths(); const progNote = `<span class="pill p-${Store.prog}">${t('program')}: ${t('prog_' + Store.prog)}</span>`;
     m.innerHTML = `<h2 class="ph">${icon('gear')} ${t('settings')}</h2>
     <div class="card"><h3>${icon('globe')} ${t('language')}</h3><div class="seg wrap">${MODES.map((l) => `<button class="${l === mode() ? 'on' : ''}" data-lang="${l}">${modeName(l)}</button>`).join('')}</div><p class="muted sm">${t('biHint')}</p></div>
-    ${updCardHtml()}
     <div class="card"><h3>${t('institution')}</h3><div class="grid2">
       <label class="fl"><span>${t('instName')}</span><input id="instName" value="${esc(I.name)}"></label>
       <label class="fl"><span>${t('defaultInstructor')}</span><input id="instInst" value="${esc(I.instructor)}"></label></div>
@@ -370,14 +360,10 @@
     </div>
     ${window.Lan ? Lan.cardHtml() : ''}
     ${window.Pro ? Pro.conflictCardHtml() : ''}
-    <div id="kulYer"></div>
     ${window.Danisman ? Danisman.cardHtml() : ''}
     <div class="card"><h3>${t('backup')}</h3><div class="row"><button class="btn" id="expBtn">${icon('dl')} ${t('exportData')}</button><label class="btn">${icon('ul')} ${t('importData')}<input type="file" accept=".json,application/json" id="impIn" hidden></label>${window.Pro ? Pro.backupExtraHtml() : ''}${Platform.kind === 'desktop' ? `<button class="btn ghost" id="bkFolder">${t('openBackupFolder')}</button>` : ''}</div>${Platform.kind === 'desktop' ? `<p class="muted sm">${t('autoBackupInfo')}</p>` : ''}</div>
-    ${Platform.kind === 'desktop' ? `<div class="card"><h3>${t('display')}</h3><p>${t('startFullscreen')}</p><button class="btn" id="fsToggle">${icon('win')} ${t('windowed')} / ${t('fullscreen')}</button></div>` : ''}
-    ${window.Pro ? Pro.aboutHtml() : `<div class="card"><h3>${t('about')}</h3><p><b>${t('appName')}</b> — ${t('version')} <b>v${Platform.version}</b> (${Platform.kind})</p><p class="muted">${t('dataSafe')}</p></div>`}
-    ${Contact.cardHtml()}`;
-    wireUpd(m); Contact.wire(m); if (window.Pro) Pro.wire(m); if (window.Danisman) Danisman.wire(m);
-    { const ky = $('#kulYer', m); if (ky && window.Kullanim) { const k = Kullanim.kart(); k.classList.add('card'); ky.replaceWith(k); } }
+    ${window.Pro ? Pro.aboutHtml() : ''}`;
+    if (window.Pro) Pro.wire(m); if (window.Danisman) Danisman.wire(m);
     { const fr = $('#fbRehber', m); if (fr) fr.onclick = (e) => { e.preventDefault(); try { Platform.openUrl ? Platform.openUrl(FB_REHBER) : window.open(FB_REHBER, '_blank'); } catch (er) { window.open(FB_REHBER, '_blank'); } }; }
     $$('[data-lang]', m).forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));
     const cfgSave = () => Store.touch('config');
@@ -421,7 +407,7 @@
     $('#expBtn', m).onclick = async () => { const name = 'IHA_Mufredat_Yedek_' + today() + '.json'; await Platform.saveFile(name, new Blob([JSON.stringify(Store.db, null, 1)], { type: 'application/json' }), 'application/json'); toast(t('exported')); };
     $('#impIn', m).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!j.curriculum || !j.students) throw new Error('JSON?'); if (await confirmDlg(t('importConfirm'))) { Store.replaceDb(j); toast(t('imported')); } } catch (er) { toast(t('error') + ': ' + er.message, 'err'); } };
     const bf = $('#bkFolder', m); if (bf) bf.onclick = () => Platform.openBackupFolder();
-    const ft = $('#fsToggle', m); if (ft) ft.onclick = () => Platform.toggleFullscreen();
+    if (window.Kabuk) Kabuk.settings(m); // 3.4: Görünüm · … · Arşiv · Asistan Agent · Kullanım Limitleri · Hata raporu · Hakkında · Admin ile iletişim (EN SON)
     if (r.anchor) { const a = $('#' + r.anchor, m); if (a) setTimeout(() => a.scrollIntoView({ behavior: 'smooth' }), 50); r.anchor = null; }
   };
   function editTri(title, val, onSave, area) {
@@ -434,105 +420,23 @@
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); return c.toDataURL('image/png');
   }
 
-  /* ---------- GÜNCELLEMELER ---------- */
-  /* v2.7: sağ üstte her zaman görünen Güncelle düğmesi (indirirken yüzde + MB) */
-  const fmtMB = (b) => (b / 1048576).toLocaleString(lang() === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  function fmtSpeed(bps) { return bps >= 1048576 ? fmtMB(bps) + ' ' + t('mbs') : Math.round(bps / 1024) + ' ' + t('kbs'); }
-  function dlInfo() {
-    const d = Updater.dl; if (!d || !d.total) return '';
-    const left = Math.max(0, d.total - d.done);
-    let s = t('dlInfo', { d: fmtMB(d.done), t: fmtMB(d.total), r: fmtMB(left) });
-    if (d.speed) s += ' · ' + t('dlSpeed', { s: fmtSpeed(d.speed) }) + (left > 0 ? ' · ' + t('dlEta', { e: Math.max(1, Math.ceil(left / d.speed)) }) : '');
-    return s;
-  }
-  function updChip() {
-    const c = $('#updChip'); if (!c) return; const U = Updater; const v = U.latest && U.latest.version;
-    c.className = 'tbb upd s-' + U.state; c.style.setProperty('--p', (U.state === 'downloading' ? U.progress : 0) + '%');
-    const d = U.dl;
-    $('.tl', c).innerHTML = U.state === 'downloading' ? '%' + U.progress + (d && d.total && d.done < d.total ? `<span class="tl2"> · ${fmtMB(d.done)}/${fmtMB(d.total)} MB</span>` : '') : esc(U.state === 'ready' ? t('restartNow') : U.state === 'available' ? t('updateChip', { v }) : U.state === 'checking' ? t('checking') : t('updBtn'));
-    c.title = U.state === 'downloading' ? (dlInfo() || t('downloading', { p: U.progress })) : U.state === 'available' ? t('updateAvailable', { v }) : t('currentVersion') + ': v' + Platform.version + '\n' + t('updBtnTip');
-  }
-  function updClick() {
-    const U = Updater;
-    if (U.state === 'ready') { U.restart(); return; }
-    if (U.supported() && !['available', 'downloading', 'checking'].includes(U.state)) U.check(true);
-    updateModal();
-  }
-  function updNotes() { const L = Updater.latest || {}; return L['notes_' + lang()] || L.notes_tr || ''; }
-  function updBoxHtml() {
-    const U = Updater; const v = U.latest && U.latest.version;
-    let st = '';
-    if (!U.supported()) st = `<p class="muted">${t('noOta')}</p>`;
-    else if (U.state === 'checking') st = `<p>${t('checking')}</p>`;
-    else if (U.state === 'uptodate') st = `<p class="ok">${icon('check')} ${t('upToDate')}</p>`;
-    else if (U.state === 'available') st = `<p><b>${t('updateAvailable', { v })}</b></p>${updNotes() ? `<div class="notes"><b>${t('whatsNew')}</b><div class="pre">${esc(updNotes())}</div></div>` : ''}<button class="btn pri" data-u="install">${icon('dl')} ${t('updateNow')}</button>`;
-    else if (U.state === 'downloading') st = `<p>${t('downloading', { p: U.progress })}</p><div class="bar"><i style="width:${U.progress}%"></i></div>${dlInfo() ? `<p class="muted sm dlinfo">${esc(dlInfo())}</p>` : ''}`;
-    else if (U.state === 'ready') st = `<p class="ok">${t('updateReady', { v })}</p><button class="btn pri" data-u="restart">${icon('bolt')} ${t('restartNow')}</button>`;
-    else if (U.state === 'shellOld') st = `<p class="err">${t('shellOld', { v })}</p>`;
-    else if (U.state === 'error') st = `<p class="err">${t('updateErr')}: ${esc(U.error)}</p>`;
-    const last = Store.local.lastUpdateCheck ? new Date(Store.local.lastUpdateCheck).toLocaleString() : '—';
-    return `<p>${t('currentVersion')}: <b>v${Platform.version}</b>${U.shell() ? ` <span class="muted sm">(${Platform.kind}, shell ${U.shell()})</span>` : ''}</p>${st}
-      ${U.supported() && !['downloading', 'ready'].includes(U.state) ? `<div class="row"><button class="btn sm" data-u="check">${icon('cloud')} ${t('checkUpdates')}</button><span class="muted sm">${t('lastCheck')}: ${last}</span></div>` : ''}`;
-  }
-  function wireUpdBox(box) {
-    $$('[data-u]', box).forEach((b) => (b.onclick = async () => {
-      const a = b.dataset.u;
-      if (a === 'check') Updater.check(true);
-      if (a === 'install') { try { await Updater.install(); } catch (e) { toast(t('updateErr') + ': ' + e.message, 'err'); } }
-      if (a === 'restart') Updater.restart();
-    }));
-  }
-  function updCardHtml() {
-    const c = Updater.cfg();
-    return `<div class="card" id="upd"><h3>${icon('dl')} ${t('updates')}</h3><div id="updBox">${updBoxHtml()}</div>
-      <div class="row updcfg">
-      <label class="chk"><input type="checkbox" id="updNotify" ${c.notify ? 'checked' : ''}> ${t('updNotifyOpt')}</label></div>
-      <p class="muted sm">${t('updStartHelp')}</p>
-      ${window.AutoPub ? AutoPub.cardHtml() : ''}
-      <details class="adv"><summary>${t('publishUpdate')}</summary><p class="muted sm">${t('publishHelp')}</p>
-      <div class="grid3"><label class="fl"><span>${t('email')}</span><input id="pubEm" dir="ltr" value="${esc(window.FB_ADMIN_EMAIL || '')}"></label><label class="fl"><span>${t('password')}</span><input id="pubPw" type="password" dir="ltr"></label>
-      <div class="fl"><span>&nbsp;</span><button class="btn pri" id="pubBtn">${icon('ul')} ${t('chooseIhu')}</button><input type="file" id="pubFile" accept=".ihu,application/json" hidden></div></div><div id="pubSt" class="muted"></div></details></div>`;
-  }
-  function wireUpd(m) {
-    const box = $('#updBox', m); if (box) wireUpdBox(box);
-    const un = $('#updNotify', m); if (un) un.onchange = () => { Store.local.upd = Object.assign(Updater.cfg(), { notify: un.checked }); Store.saveLocal(); };
-    if (window.AutoPub) AutoPub.wire(m);
-    const fi = $('#pubFile', m); if (!fi) return;
-    $('#pubBtn', m).onclick = () => { if (!$('#pubPw', m).value) { toast(t('password') + ': ' + t('required'), 'err'); $('#pubPw', m).focus(); return; } fi.click(); };
-    fi.onchange = async (e) => {
-      const f = e.target.files[0]; if (!f) return; e.target.value = '';
-      const st = $('#pubSt', m); const pw = $('#pubPw', m).value; const em = $('#pubEm', m).value.trim();
-      st.textContent = t('publishing', { p: 0 });
-      try { const v = await Updater.publish(await f.text(), em, pw, (p) => (st.textContent = t('publishing', { p }))); st.innerHTML = `<span class="ok">${esc(t('published', { v }))}</span>`; toast(t('published', { v })); setTimeout(() => Updater.check(true), 1500); }
-      catch (er) { console.error(er); st.innerHTML = `<span class="err">${esc(t('error') + ': ' + er.message)}</span>`; }
-    };
-  }
-  function updateModal() {
-    if (Updater.state === 'ready') { Updater.restart(); return; }
-    if (modals.length && document.getElementById('updBox2')) return;
-    const mm = modal(icon('dl') + ' ' + t('updates'), `<div id="updBox2">${updBoxHtml()}</div>`, {});
-    const box = $('#updBox2', mm.el); wireUpdBox(box);
-    Updater.on(() => { if (!document.body.contains(box)) return; box.innerHTML = updBoxHtml(); wireUpdBox(box); });
-  }
-
   /* ---------- YARDIM ---------- */
   PAGES.help = (m, r) => {
     m.innerHTML = `<h2 class="ph">${icon('help')} ${t('helpTitle')}</h2>${lang2() && window.HELP && HELP[lang2()] ? `<div class="helpbi"><div class="card help">${HELP[lang()] || HELP.tr}</div><div class="card help" dir="rtl" lang="ar">${HELP[lang2()]}</div></div>` : `<div class="card help">${(window.HELP && (HELP[lang()] || HELP.tr)) || ''}</div>`}`;
     if (r.anchor) { const a = $('#' + r.anchor, m); if (a) setTimeout(() => a.scrollIntoView(), 50); r.anchor = null; }
   };
 
-  window.UI = { $, $$, esc, icon, tx, t: window.t, lang, lang2, mode, MODES, setLang, keepPos, afterRender, biScan, fmtDate, today, toast, modal, confirmDlg, triFields, readTri, readTriAuto, wireTri, triBlockFoot, fillTranslations, editTri, go, back, render, shell, PAGES, R, studentRow, resizeImage, modals, setProgram, ensureProg };
+  window.UI = { $, $$, esc, icon, tx, t: window.t, lang, lang2, mode, MODES, setLang, keepPos, afterRender, biScan, fmtDate, today, toast, modal, confirmDlg, triFields, readTri, readTriAuto, wireTri, triBlockFoot, fillTranslations, editTri, go, back, render, shell, PAGES, R, studentRow, resizeImage, modals, setProgram, ensureProg, syncClick };
 
   window.App = {
     async start() {
       await Store.init();
       document.body.classList.add('pf-' + Platform.kind);
+      if (window.Kabuk) Kabuk.init(); // 3.4: ortak çekirdek (dil, görünüm, iletişim, çökme raporu, güncelleme, Asistan Agent)
       shell(); render();
       Sync.start();
-      Updater.on(() => { updChip(); const b = $('#updBox'); if (b) { b.innerHTML = updBoxHtml(); wireUpdBox(b); } });
-      Updater.init();
       if (window.Pro) Pro.start();
-      if (window.KabukGec) setTimeout(() => KabukGec.check(), 2500);
+      if (window.Kabuk) Kabuk.started();
       if (window.Lan) Lan.start();
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modals.length) modals[modals.length - 1](); });
     },

@@ -13,15 +13,8 @@
   function hideSplash() { const s = document.getElementById('splash'); if (!s) return; s.classList.add('gone'); setTimeout(() => s.remove(), 600); }
 
   /* ---------- yenilikler ---------- */
-  function whatsNew(force) {
-    const seen = Store.local.seenVer; const v = Platform.version;
-    if (!force && seen === v) return;
-    Store.local.seenVer = v; Store.saveLocal();
-    if (!force && !seen) return; // ilk kurulum: gösterme
-    const CL = window.CHANGELOG || []; const e = CL.find((x) => x.v === v) || CL[0]; if (!e) return;
-    const list = (e[L()] || e.tr || []).map((x) => `<li>${esc(x)}</li>`).join('');
-    modal(icon('bolt') + ' ' + t('wnTitle', { v: e.v }), `<ul class="wnl">${list}</ul><p class="muted sm">${t('dataSafe')}</p>`, { cls: 'small' });
-  }
+  // 3.4: "neler yeni" ortak çekirdekte (FC.whatsnew, notlar changelog.js'ten — bkz. kabuk.js)
+  function whatsNew(force) { if (force && window.FC && FC.whatsnew) FC.whatsnew.show(); }
 
   /* ---------- hata raporu ---------- */
   const errSeen = new Set();
@@ -32,10 +25,7 @@
     try { Platform.logError && Platform.logError(text + (stack ? '\n' + String(stack).slice(0, 1500) : '')); } catch (e) {}
     const q = Store.local; if (!q) return;
     q.errLog = (q.errLog || []).slice(-29); q.errLog.push({ t: Date.now(), m: text }); Store.saveLocal();
-    if (q.errReport === false || !window.Contact || !Contact.autoReport) return;
-    const day = new Date().toISOString().slice(0, 10); q.errDay = q.errDay && q.errDay.d === day ? q.errDay : { d: day, n: 0 };
-    if (q.errDay.n >= 5) return; q.errDay.n++; Store.saveLocal();
-    Contact.autoReport(text + (stack ? '\n\n' + String(stack).slice(0, 1200) : ''));
+    // 3.4: yöneticiye gönderim ortak çekirdeğin çökme raporundadır (FC.crash: günde en çok 5, aynı hata bir kez, kişisel veri maskelenir)
   }
   window.addEventListener('error', (e) => report('hata', e.message, e.error && e.error.stack));
   window.addEventListener('unhandledrejection', (e) => { const r = e.reason; if (r && (r.code === 'permission-denied' || /network|offline|Failed to fetch/i.test(r.message || ''))) return; report('söz', (r && r.message) || r, r && r.stack); });
@@ -82,7 +72,7 @@
     const all = await Merge.conflicts();
     if (!all.length) { box.innerHTML = `<span class="ok">${icon('check')} ${t('cfNone')}</span>`; return; }
     box.className = '';
-    box.innerHTML = `<ul class="cfl">${all.slice(0, 60).map((c) => `<li data-cf="${c.id}"><div><b>${esc(c.name || c.key)}</b> <span class="muted sm">${esc(new Date(c.t).toLocaleString())} · ${t(c.src === 'ag' ? 'cfSrcLan' : 'cfSrcCloud')}</span></div><div class="sm">${esc(pathTxt(c.path))}</div><div class="sm"><span class="muted">${t('cfKept')}:</span> <code>${esc(prev(c.kept))}</code></div><div class="sm"><span class="muted">${t('cfLost')}:</span> <code>${esc(prev(c.lost))}</code></div><div class="row"><button class="btn sm" data-cfa="use">${icon('up')} ${t('cfUse')}</button><button class="btn ghost sm" data-cfa="del">${icon('x')} ${t('cfDismiss')}</button></div></li>`).join('')}</ul><button class="btn ghost sm" id="cfClear">${icon('trash')} ${t('cfClear')}</button>`;
+    box.innerHTML = `<ul class="cfl">${all.slice(0, 60).map((c) => `<li data-cf="${c.id}"><div><b>${esc(c.name || c.key)}</b> <span class="muted sm">${esc(new Date(c.t).toLocaleString())} · ${t(c.src === 'ag' ? 'cfSrcLan' : c.src === 'arsiv' ? 'fcArchiveSrc' : 'cfSrcCloud')}</span></div><div class="sm">${esc(pathTxt(c.path))}</div><div class="sm"><span class="muted">${t('cfKept')}:</span> <code>${esc(prev(c.kept))}</code></div><div class="sm"><span class="muted">${t('cfLost')}:</span> <code>${esc(prev(c.lost))}</code></div><div class="row"><button class="btn sm" data-cfa="use">${icon('up')} ${t('cfUse')}</button><button class="btn ghost sm" data-cfa="del">${icon('x')} ${t('cfDismiss')}</button></div></li>`).join('')}</ul><button class="btn ghost sm" id="cfClear">${icon('trash')} ${t('cfClear')}</button>`;
     $$('[data-cf]', box).forEach((li) => {
       const c = all.find((x) => String(x.id) === li.dataset.cf);
       li.querySelector('[data-cfa="use"]').onclick = async () => { if (Merge.restoreConflict(c)) { await Merge.removeConflict(c.id); toast(t('cfRestored')); } else toast(t('cfCant'), 'err'); fillConflicts(m); };
@@ -94,21 +84,16 @@
 
   /* ---------- hakkında ---------- */
   function aboutHtml() {
-    return `<div class="card" id="hakkinda"><h3>${icon('plane')} ${t('about')}</h3><div class="about">
+    return `<div class="card" id="hakkinda"><h3>${icon('plane')} ${t('fcDiagTitle')}</h3><div class="about">
       <div class="logo big">${document.querySelector('.brand .logo') ? document.querySelector('.brand .logo').innerHTML : ''}</div>
       <div><p><b>${t('appName')}</b></p><p>${t('version')} <b>v${esc(Platform.version)}</b> · ${esc(Platform.kind)}</p><p class="muted sm" id="abInfo"></p></div></div>
       <p class="muted sm">${t('privacyNote')}</p>
-      ${window.KabukGec ? KabukGec.cardHtml() : ''}
-      <div class="row"><button class="btn sm" id="abNew">${icon('bolt')} ${t('wnShow')}</button>${Platform.openDataFolder ? `<button class="btn ghost sm" id="abData">${icon('archive')} ${t('openDataFolder')}</button>` : ''}${Platform.readLog ? `<button class="btn ghost sm" id="abLog">${icon('file')} ${t('errLogShow')}</button>` : ''}</div>
-      <label class="chk"><input type="checkbox" id="errRep" ${Store.local.errReport === false ? '' : 'checked'}> ${t('errReportOpt')}</label></div>`;
+      <div class="row">${Platform.openDataFolder ? `<button class="btn ghost sm" id="abData">${icon('archive')} ${t('openDataFolder')}</button>` : ''}${Platform.readLog ? `<button class="btn ghost sm" id="abLog">${icon('file')} ${t('errLogShow')}</button>` : ''}</div></div>`;
   }
   function wire(m) {
-    const ab = $('#abNew', m); if (ab) ab.onclick = () => whatsNew(true);
     const ad = $('#abData', m); if (ad) ad.onclick = () => Platform.openDataFolder();
     const al = $('#abLog', m); if (al) al.onclick = async () => { const s = await Platform.readLog(); modal(t('errLogShow'), `<pre class="logpre" dir="ltr">${esc(s || t('errLogEmpty'))}</pre>`, { wide: true }); };
-    const er = $('#errRep', m); if (er) er.onchange = () => { Store.local.errReport = er.checked; Store.saveLocal(); };
     const br = $('#bkRestore', m); if (br) br.onclick = restoreModal;
-    if (window.KabukGec) KabukGec.wire(m);
     const inf = $('#abInfo', m); if (inf && Platform.appInfo) Platform.appInfo().then((i) => { inf.textContent = t('abInfo', { k: i.shell, e: i.electron, o: i.os }); }).catch(() => {});
     fillConflicts(m);
     if (window.Lan) Lan.wire(m);
@@ -118,7 +103,6 @@
 
   function start() {
     hideSplash();
-    setTimeout(() => whatsNew(false), 1200);
   }
   window.Pro = { start, whatsNew, report, restoreModal, conflictCardHtml, aboutHtml, backupExtraHtml, wire, hideSplash };
 })();
