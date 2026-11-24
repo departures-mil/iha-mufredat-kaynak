@@ -1,6 +1,6 @@
 // Electron açılış testleri (gerçek ana süreç + preload + arayüz; Linux'ta xvfb-run). Electron ikilisi yoksa atlanır.
 //  1) Yeni kabuk (kabuk/main.js, IHA_SMOKE=1): çekirdek, tam ekran, üst çubuk, 4 pencere düğmesi, ayarlar sırası.
-//  2) ESKİ KÖPRÜ: 3.3'ün ana süreci (test/fixtures/eski-kabuk-3.3, birebir) + eski kanaldaki köprü paketi (araclar/eski-kanal.js)
+//  2) ESKİ KÖPRÜ: 3.3'ün (kabuk 3) ve 2.8'in (kabuk 2, ≤2.7 kurulumlarla aynı) ana süreci (test/fixtures/eski-kabuk-*, birebir) + eski kanaldaki köprü paketi (araclar/eski-kanal.js)
 //     ota\3.4 klasöründe → yeni arayüz eski kabukta hatasız açılır, "Yeni kurulum gerekli" penceresi çıkar, "açıldı" onayı verilir.
 'use strict';
 const test = require('node:test');
@@ -53,11 +53,11 @@ test('Electron: yeni kabuk açılır, çekirdek başlar, tam ekran, ayarlar sır
   assert.strictEqual(o.ok, true);
 });
 
-test('ESKİ KÖPRÜ: 3.3 kabuğu köprü paketini açar → "Yeni kurulum gerekli", açılış onayı', { skip, timeout: 130000 }, () => {
+for (const [FXN, BOOT] of [['eski-kabuk-3.3', 'boot.js'], ['eski-kabuk-2.8', 'main.js']]) test('ESKİ KÖPRÜ: ' + FXN + ' kabuğu köprü paketini açar → "Yeni kurulum gerekli", açılış onayı', { skip, timeout: 130000 }, () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'iha-eski-'));
   const app = path.join(tmp, 'app'), cfg = path.join(tmp, 'config');
   fs.mkdirSync(app, { recursive: true });
-  const FX = path.join(__dirname, 'fixtures', 'eski-kabuk-3.3');
+  const FX = path.join(__dirname, 'fixtures', FXN);
   for (const f of fs.readdirSync(FX)) fs.copyFileSync(path.join(FX, f), path.join(app, f));
   fs.cpSync(path.join(ROOT, 'ui', 'vendor'), path.join(app, 'ui', 'vendor'), { recursive: true });   // kurulu eski ui\ (vendor kabukla gelir)
   fs.writeFileSync(path.join(app, 'ui', 'index.html'), '<!doctype html><title>eski 3.3</title>');
@@ -74,7 +74,7 @@ app.on('web-contents-created', (e, wc) => { wc.once('did-finish-load', () => set
   catch (er) { r = { error: String(er && er.message || er) }; }
   process.stdout.write('IHA_ESKI ' + JSON.stringify(r) + '\\n'); setTimeout(() => app.exit(0), 300);
 }, 6000)); });
-require('./boot.js');
+require('./${BOOT}');
 `);
   const o = run([app, '--no-sandbox', '--disable-gpu'], { XDG_CONFIG_HOME: cfg, HOME: tmp }, 'IHA_ESKI');
   console.log(Object.assign({}, o, { cmd: o.cmd && o.cmd.length }));

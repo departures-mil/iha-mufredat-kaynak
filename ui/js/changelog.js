@@ -1,5 +1,12 @@
 /* Sürüm notları — "Yenilikler" penceresi ve Ayarlar › Hakkında */
 window.CHANGELOG = [
+  { v: '3.4.2',
+    tr: ['Eski sürümlerden (2.7 ve öncesi) gelenler de artık yeni sürümü görür: program açılınca «Yeni kurulum gerekli» der, tek tuşla yeni kurulumu indirip kurar. Kayıtlar korunur.',
+      'Sağ üstteki pencere düğmeleri (Küçült · Orta · Tam ekran · Kapat) eski kurulumlarda da her zaman görünür.'],
+    en: ['Installs coming from old versions (2.7 and earlier) now see the new version too: on start the program says «New installation required» and installs it with one click. Records are kept.',
+      'The window buttons at the top right (Minimise · Half · Full screen · Close) are now always visible on old installs too.'],
+    ar: ['أصبحت النسخ القديمة (2.7 وما قبلها) ترى الإصدار الجديد أيضاً: عند التشغيل يعرض البرنامج «يلزم تثبيت جديد» ويثبّته بنقرة واحدة. السجلات محفوظة.',
+      'أزرار النافذة في الأعلى يميناً (تصغير · نصف · ملء الشاشة · إغلاق) تظهر دائماً في النسخ القديمة أيضاً.'] },
   { v: '3.4.1',
     tr: ['Gizlilik: yönetici e-postası programın içinde artık düz metin olarak tutulmuyor (yalnız özet karşılaştırılır). Eşitleme ve giriş aynen çalışır.'],
     en: ['Privacy: the administrator e-mail is no longer stored as plain text in the program (only a hash is compared). Sync and sign-in work as before.'],

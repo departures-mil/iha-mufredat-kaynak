@@ -144,9 +144,12 @@
   function legacyTopbar() { }
   if (LEGACY) {
     var d = window.desktop, h = FC.host;
-    h.can.minimize = !!d.minimize; h.can.fullscreen = true; h.can.close = true; h.can.half = !!d.toggleMaximize;
-    h.window.minimize = function () { return d.minimize ? d.minimize() : d.toggleFullscreen(); };
-    h.window.half = function () { return d.toggleMaximize ? d.toggleMaximize() : d.toggleFullscreen(); };
+    // Kabuk 2 (≤2.8 kurulumlar) küçült/orta IPC'si yok: tam ekrandan çıkınca pencere ortalanır ve Windows çerçevesi (gerçek küçült) görünür.
+    // Bu yüzden dört düğme de her kabukta görünür (kullanıcı isteği: sağ üstte Küçült · Orta · Tam ekran · Kapat).
+    h.can.minimize = true; h.can.fullscreen = true; h.can.close = true; h.can.half = true;
+    var outOfFs = function () { return d.isFullscreen().then(function (v) { return v ? d.toggleFullscreen() : false; }); };
+    h.window.minimize = function () { return d.minimize ? d.minimize() : outOfFs(); };
+    h.window.half = function () { return d.toggleMaximize ? d.toggleMaximize() : outOfFs(); };
     h.window.toggleFullscreen = function () { return d.toggleFullscreen(); };
     h.window.close = function () { try { Store.persistNow(); } catch (e) { } setTimeout(function () { d.quit(); }, 150); return Promise.resolve(); };
     h.window.state = function () { return d.isFullscreen().then(function (v) { return { fullscreen: !!v }; }); };
