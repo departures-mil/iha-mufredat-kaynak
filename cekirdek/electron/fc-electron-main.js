@@ -43,23 +43,44 @@ function stage(o, buf, meta) {
   ofs.renameSync(tmp, next);
   return { target, next };
 }
+/* Windows takası: konsol penceresi AÇMAYAN yardımcı. Eskiden .cmd betiği (tasklist | find) kullanılıyordu; Windows Terminal
+   varsayılan konsolken her komut ayrı siyah pencere açıyor, `find` girdisiz kalıp sonsuza dek bekliyordu (güncelleme olmuyordu).
+   Şimdi programın kendi exe'si ELECTRON_RUN_AS_NODE ile (GUI alt sistemi → pencere yok) küçük bir Node betiğini çalıştırır:
+   program kapanana dek bekler (en çok 60 sn, sonra zorla kapatır), kilitli dosyalar için 40 kez yeniden dener,
+   eskisini .bak yapar, yenisini koyar, programı yeniden açar; başarısızsa eskisini geri koyar. Günlük: %TEMP%\fc-update.log */
+function swapHelper(cfg) {
+  process.noAsar = true;
+  const fs = require('fs'), cp = require('child_process'), path = require('path');
+  const log = (m) => { try { fs.appendFileSync(cfg.log, new Date().toISOString() + ' ' + m + '\n'); } catch (e) {} };
+  const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const tryN = async (f, n) => { for (let i = 0; ; i++) { try { return f(); } catch (e) { if (i >= n) throw e; await sleep(500); } } };
+  (async () => {
+    log('basladi pid=' + cfg.pid);
+    for (let i = 0; i < 240 && alive(cfg.pid); i++) await sleep(250);
+    if (alive(cfg.pid)) { log('zorla kapatiliyor'); try { process.kill(cfg.pid); } catch (e) {} await sleep(1500); }
+    let ok = false;
+    try {
+      try { fs.unlinkSync(cfg.target + '.bak'); } catch (e) {}
+      await tryN(() => fs.renameSync(cfg.target, cfg.target + '.bak'), 40);
+      try { await tryN(() => fs.renameSync(cfg.next, cfg.target), 40); ok = true; }
+      catch (e) { log('yeni konulamadi ' + e.message); await tryN(() => fs.renameSync(cfg.target + '.bak', cfg.target), 40); }
+    } catch (e) { log('takas hatasi ' + e.message); }
+    log(ok ? 'takas tamam' : 'eski surumle aciliyor');
+    const env = Object.assign({}, process.env); delete env.ELECTRON_RUN_AS_NODE;
+    try { cp.spawn(cfg.exe, cfg.args, { detached: true, stdio: 'ignore', env, cwd: path.dirname(cfg.exe) }).unref(); } catch (e) { log('acilamadi ' + e.message); }
+    try { fs.unlinkSync(__filename); } catch (e) {}
+    setTimeout(() => process.exit(0), 500);
+  })();
+}
 function swapAndRelaunch(o, st) {
   const exe = process.execPath, args = process.argv.slice(1).filter((a) => !/^--fc-/.test(a));
   if (process.platform === 'win32') {
-    const q = (s) => '"' + String(s).replace(/"/g, '') + '"';
-    const bat = path.join(os.tmpdir(), 'fc-update-' + process.pid + '.cmd');
-    const lines = [
-      '@echo off', 'setlocal', 'set N=0',
-      ':wait', `tasklist /FI "PID eq ${process.pid}" 2>NUL | find "${process.pid}" >NUL`,
-      'if not errorlevel 1 ( set /a N+=1 & if %N% LSS 90 ( ping -n 2 127.0.0.1 >NUL & goto wait ) )',
-      `if exist ${q(st.target + '.bak')} del /F /Q ${q(st.target + '.bak')} >NUL 2>&1`,
-      `move /Y ${q(st.target)} ${q(st.target + '.bak')} >NUL 2>&1 || goto fail`,
-      `move /Y ${q(st.next)} ${q(st.target)} >NUL 2>&1 || ( move /Y ${q(st.target + '.bak')} ${q(st.target)} >NUL 2>&1 & goto fail )`,
-      ':run', `start "" ${q(exe)} ${args.map(q).join(' ')}`, '(goto) 2>NUL & del "%~f0"',
-      ':fail', 'goto run'
-    ];
-    ofs.writeFileSync(bat, lines.join('\r\n'));
-    spawn('cmd.exe', ['/d', '/c', bat], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+    const js = path.join(os.tmpdir(), 'fc-update-' + process.pid + '.js');
+    const cfg = { pid: process.pid, target: st.target, next: st.next, exe, args, log: path.join(os.tmpdir(), 'fc-update.log') };
+    ofs.writeFileSync(js, '(' + swapHelper.toString() + ')(' + JSON.stringify(cfg) + ');\n');
+    const env = Object.assign({}, process.env, { ELECTRON_RUN_AS_NODE: '1' });
+    spawn(exe, [js], { detached: true, stdio: 'ignore', windowsHide: true, env }).unref();
     setTimeout(() => app.exit(0), 300);
   } else {
     try { ofs.unlinkSync(st.target + '.bak'); } catch (e) {}
@@ -93,7 +114,8 @@ function runSetup(buf, meta) {
   const exe = path.join(dir, /\.exe$/i.test(name) ? name : name + '.exe');
   ofs.writeFileSync(exe, buf);
   if (sha(ofs.readFileSync(exe)) !== sha(buf)) throw err('STAGE_VERIFY');
-  spawn(exe, [], { detached: true, stdio: 'ignore', windowsHide: false }).unref();
+  // Sessiz kurulum (/S): eski sürümün üzerine kurar, kayıtlara dokunmaz; --force-run kurulum bitince programı açar. Pencere yok.
+  spawn(exe, ['/S', '--force-run'], { detached: true, stdio: 'ignore', windowsHide: true, cwd: dir }).unref();
   setTimeout(() => app.exit(0), 400);
   return 'restarting';
 }
@@ -178,4 +200,4 @@ function install(win, opts) {
   return { state, setHalf, forward };
 }
 
-module.exports = { windowOptions, install, applyFcd1, cleanup, stage, swapAndRelaunch };
+module.exports = { windowOptions, install, applyFcd1, cleanup, stage, swapAndRelaunch, swapHelper };
