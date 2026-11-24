@@ -11,4 +11,13 @@
     Delete "$SMPROGRAMS\İHA Müfredat Sistemi\İHA Müfredat Sistemi v*.lnk"
     RMDir "$SMPROGRAMS\İHA Müfredat Sistemi"
   ihaEskiYok:
+  ; ≤3.3 ayrı klasöre kurulmuştu ("IHA Mufredat Sistemi"); yeni kurulum başka klasördeyse eskisini kaldır (kayıtlara dokunmaz)
+  StrCmp "$LOCALAPPDATA\Programs\IHA Mufredat Sistemi" "$INSTDIR" ihaAyri
+  IfFileExists "$LOCALAPPDATA\Programs\IHA Mufredat Sistemi\resources\app\main.js" 0 ihaAyri
+    RMDir /r "$LOCALAPPDATA\Programs\IHA Mufredat Sistemi"
+    DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\IHAMufredatSistemi"
+  ihaAyri:
+  Delete "$DESKTOP\İHA Müfredat Sistemi v*.lnk"
+  Delete "$SMPROGRAMS\İHA Müfredat Sistemi v*.lnk"
+  Delete "$SMPROGRAMS\İHA Müfredat Sistemi\İHA Müfredat Sistemi v*.lnk"
 !macroend

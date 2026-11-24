@@ -1,5 +1,9 @@
 /* Sürüm notları — "Yenilikler" penceresi ve Ayarlar › Hakkında */
 window.CHANGELOG = [
+  { v: '3.4.3',
+    tr: ['Eski sürümden (2.7 ve öncesi) geçişte, ayrı klasörde kalan eski program ve «İHA Müfredat Sistemi v2.7» gibi eski kısayollar kendiliğinden kaldırılır. Kayıtlara dokunulmaz.'],
+    en: ['When moving from an old version (2.7 and earlier), the old program left in a separate folder and old shortcuts such as «İHA Müfredat Sistemi v2.7» are removed automatically. Records are not touched.'],
+    ar: ['عند الانتقال من إصدار قديم (2.7 وما قبله) يُزال تلقائياً البرنامج القديم المتبقي في مجلد منفصل والاختصارات القديمة مثل «İHA Müfredat Sistemi v2.7». لا تُمَسّ السجلات.'] },
   { v: '3.4.2',
     tr: ['Eski sürümlerden (2.7 ve öncesi) gelenler de artık yeni sürümü görür: program açılınca «Yeni kurulum gerekli» der, tek tuşla yeni kurulumu indirip kurar. Kayıtlar korunur.',
       'Sağ üstteki pencere düğmeleri (Küçült · Orta · Tam ekran · Kapat) eski kurulumlarda da her zaman görünür.'],

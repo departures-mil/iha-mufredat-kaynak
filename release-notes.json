@@ -1,5 +1,5 @@
 {
- "tr": "• Eski sürümlerden (2.7 ve öncesi) gelenler de artık yeni sürümü görür: program açılınca «Yeni kurulum gerekli» der, tek tuşla yeni kurulumu indirip kurar. Kayıtlar korunur.\n• Sağ üstteki pencere düğmeleri (Küçült · Orta · Tam ekran · Kapat) eski kurulumlarda da her zaman görünür.",
- "en": "• Installs coming from old versions (2.7 and earlier) now see the new version too: on start the program says «New installation required» and installs it with one click. Records are kept.\n• The window buttons at the top right (Minimise · Half · Full screen · Close) are now always visible on old installs too.",
- "ar": "• أصبحت النسخ القديمة (2.7 وما قبلها) ترى الإصدار الجديد أيضاً: عند التشغيل يعرض البرنامج «يلزم تثبيت جديد» ويثبّته بنقرة واحدة. السجلات محفوظة.\n• أزرار النافذة في الأعلى يميناً (تصغير · نصف · ملء الشاشة · إغلاق) تظهر دائماً في النسخ القديمة أيضاً."
+ "tr": "• Eski sürümden (2.7 ve öncesi) geçişte, ayrı klasörde kalan eski program ve «İHA Müfredat Sistemi v2.7» gibi eski kısayollar kendiliğinden kaldırılır. Kayıtlara dokunulmaz.",
+ "en": "• When moving from an old version (2.7 and earlier), the old program left in a separate folder and old shortcuts such as «İHA Müfredat Sistemi v2.7» are removed automatically. Records are not touched.",
+ "ar": "• عند الانتقال من إصدار قديم (2.7 وما قبله) يُزال تلقائياً البرنامج القديم المتبقي في مجلد منفصل والاختصارات القديمة مثل «İHA Müfredat Sistemi v2.7». لا تُمَسّ السجلات."
 }

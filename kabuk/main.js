@@ -51,6 +51,29 @@ function dailyBackup(json) {
 }
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
+/* Eski ayrı kurulumu temizle (≤3.3, kabuk 2/3): %LOCALAPPDATA%\Programs\IHA Mufredat Sistemi (resources\app\main.js ile tanınır).
+   Yeni kurulum electron-builder'ın klasörüne (iha-mufredat-sistemi) gider; eski klasör, "İHA Müfredat Sistemi vX.Y" kısayolları ve
+   eski "Programlar" kaydı kalırsa kullanıcı yanlışlıkla eski programı açar. Yalnız program dosyaları silinir;
+   kayıtlar %APPDATA%\IHAMufredatSistemi'de, ona DOKUNULMAZ. */
+function eskiKurulumuTemizle() {
+  if (process.platform !== 'win32' || !app.isPackaged || SMOKE) return;
+  try {
+    const benim = path.dirname(process.execPath).toLowerCase();
+    const yerel = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
+    const eski = path.join(yerel, 'Programs', 'IHA Mufredat Sistemi');
+    const eskiVar = eski.toLowerCase() !== benim && fs.existsSync(path.join(eski, 'resources', 'app', 'main.js'));
+    if (eskiVar) {
+      try { fs.rmSync(eski, { recursive: true, force: true, maxRetries: 3 }); logErr('eski kurulum kaldırıldı: ' + eski); } catch (e) { logErr('eski kurulum kaldırılamadı: ' + e.message); }
+      try { require('child_process').execFile('reg', ['delete', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\IHAMufredatSistemi', '/f'], () => {}); } catch (e) {}
+    }
+    const kisa = /^İHA Müfredat Sistemi v[\d.]+\.lnk$/i;
+    const sm = path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs');
+    for (const d of [app.getPath('desktop'), sm, path.join(sm, 'İHA Müfredat Sistemi')]) {
+      try { for (const f of fs.readdirSync(d)) if (kisa.test(f)) fs.rmSync(path.join(d, f), { force: true }); } catch (e) {}
+    }
+  } catch (e) { logErr('eski kurulum temizliği: ' + (e && e.message)); }
+}
+
 function createWindow() {
   Menu.setApplicationMenu(null);
   win = new BrowserWindow(fc.windowOptions({
@@ -187,5 +210,6 @@ app.whenReady().then(() => {
   });
 
   createWindow();
+  setTimeout(eskiKurulumuTemizle, 15000);
 });
 app.on('window-all-closed', () => app.quit());
