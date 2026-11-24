@@ -46,7 +46,10 @@ test('paketleme: NSIS kullanıcı başına, tek tık, tr/en/ar, kendi simgesi; e
   const nsh = R(b.nsis.include);
   assert.match(nsh, /!macro customInstall/);
   assert.match(nsh, /RMDir \/r "\$INSTDIR\\resources\\app"/, 'eski açık klasör kaldırılır (Electron önce resources\\app\'i yükler)');
-  assert.ok(!/APPDATA|IHAMufredatSistemi\\\\veri/.test(nsh.replace(/;.*$/gm, '')), 'kurulum eki kullanıcı verisine dokunmaz');
+  const kod = nsh.replace(/;.*$/gm, '');
+  assert.ok(!/(?<!LOCAL)APPDATA|IHAMufredatSistemi\\\\veri/.test(kod), 'kurulum eki kullanıcı verisine dokunmaz');
+  // ≤3.3'ün ayrı program klasörü (yalnız program dosyaları) kaldırılabilir; başka bir LOCALAPPDATA yoluna dokunulmaz
+  assert.ok((kod.match(/\$LOCALAPPDATA[^"]*/g) || []).every((x) => x.startsWith('$LOCALAPPDATA\\Programs\\IHA Mufredat Sistemi')), 'yalnız eski program klasörü');
   for (const f of b.files) if (!/\*/.test(f)) assert.ok(fs.existsSync(path.join(ROOT, f)), 'paket dosyası: ' + f);
 });
 
