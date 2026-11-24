@@ -1,5 +1,9 @@
 /* Sürüm notları — "Yenilikler" penceresi ve Ayarlar › Hakkında */
 window.CHANGELOG = [
+  { v: '3.4.1',
+    tr: ['Gizlilik: yönetici e-postası programın içinde artık düz metin olarak tutulmuyor (yalnız özet karşılaştırılır). Eşitleme ve giriş aynen çalışır.'],
+    en: ['Privacy: the administrator e-mail is no longer stored as plain text in the program (only a hash is compared). Sync and sign-in work as before.'],
+    ar: ['الخصوصية: لم يعد البريد الإلكتروني للمسؤول محفوظاً كنص صريح في البرنامج (تُقارن قيمة التجزئة فقط). تعمل المزامنة وتسجيل الدخول كما كانت.'] },
   { v: '3.4.0',
     tr: ['Yeni kurulum programı (Windows, kullanıcı başına): her açılışta tam ekran; sağ üstte Eşitle · Wi‑Fi · Güncelle · tema · dil | Küçült · Orta · Tam ekran · Kapat.',
       'Tek tuşla güncelleme GitHub sürümlerinden gelir: yüzde, inen/toplam MB, kalan MB ve hız görünür; çoğu zaman yalnızca değişen kısımlar indirilir.',

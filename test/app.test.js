@@ -164,3 +164,14 @@ test('çeviriler: kabuk.js metinleri tr/en/ar tam', () => {
   const keys = Object.keys(TXT.tr);
   for (const l of ['en', 'ar']) assert.deepStrictEqual(Object.keys(TXT[l]).sort(), keys.slice().sort(), l);
 });
+
+test('3.4.1: yönetici e-postası düz metin değil; özet karşılaştırması çalışır', () => {
+  const fs = require('fs'), path = require('path'), vm = require('vm'), crypto = require('crypto');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'ui', 'js', 'fbconfig.js'), 'utf8');
+  assert.ok(!/qa\d+@gmail\.com/.test(src));
+  const ctx = { window: {}, TextEncoder };
+  vm.runInNewContext(src, ctx);
+  ctx.window.FB_ADMIN_SHA256 = crypto.createHash('sha256').update('yonetici@example.com').digest('hex');
+  assert.strictEqual(ctx.window.fbYoneticiMi('  Yonetici@Example.com '), true);
+  assert.strictEqual(ctx.window.fbYoneticiMi('baska@example.com'), false);
+});
