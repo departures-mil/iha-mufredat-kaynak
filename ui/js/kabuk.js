@@ -193,6 +193,12 @@
     var cards = Array.prototype.filter.call(m.children, function (c) { return c !== head; });
     var conflictIdx = cards.findIndex(function (c) { return c.id === 'cakisma'; });
     cards.splice(conflictIdx >= 0 ? conflictIdx + 1 : cards.length, 0, archiveCard());
+    if (window.FCYZ && FCYZ.available()) { // çevrimdışı yapay zekâ kartı (OCR + çeviri paketleri)
+      var yz = document.createElement('div'); yz.className = 'card'; yz.id = 'yerelZeka';
+      yz.innerHTML = '<h3>' + UI.icon('cloud') + ' ' + esc(FCYZ.title({ lang: document.documentElement.lang })) + '</h3>';
+      yz.appendChild(FCYZ.card({ lang: document.documentElement.lang, packs: ['llm', 'mt'] }));
+      cards.splice(cards.indexOf(cards.find(function (c) { return c.id === 'arsiv'; })), 0, yz);
+    }
     var g = FC.settings.build(m, { cards: cards, usage: usageOpts(), about: { version: VER }, onboarding: OB });
     g.el.classList.add('iha-settings');
     return g;

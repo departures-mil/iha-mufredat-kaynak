@@ -34,3 +34,7 @@ arayüz `ui/` düz JS (sırayla `ui/index.html`'den yüklenir). Türkçe kaynak;
 - `npm test`: `test/app.test.js` (sürüm, paket, çekirdek, 3.3 güncelleyicisiyle köprü, eşitleme kuralı) + `test/electron-smoke.test.js`
   (gerçek Electron, xvfb: yeni kabuk `IHA_SMOKE=1` + 3.3 ana süreci `test/fixtures/eski-kabuk-3.3` içinde köprü). `IHA_VERI=<klasör>` veri yerini değiştirir.
 - Ekran görüntüleri: `PLAYWRIGHT_CORE=/opt/npm-tools/node_modules/playwright-core xvfb-run -a -s "-screen 0 1600x1000x24" node araclar/ekran.js <klasör>`.
+
+## Çevrimdışı yapay zekâ (3.5.0)
+- ortak-cekirdek `web/yerel-zeka` kopyası: `cekirdek/electron/yerel-zeka/` + `ui/cekirdek/fc-yerel-zeka-ui.js`. Ayarlar kartı `#yerelZeka` (Arşiv'den önce, yalnız çeviri
+  paketleri). `translateText` çevrimdışında önce `FCYZ.translate` (TranslateGemma / NLLB; bellek = GLOSSARY), sonra `OfflineTR.translate`. Çıktı taslak (_mt).

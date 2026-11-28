@@ -141,6 +141,14 @@
     if (navigator.onLine !== false) {
       try { const r = await withTimeout(online(text, from, to), 7000); if (r && String(r).trim()) return r; } catch (e) { /* çevrimdışı yola geç */ }
     }
+    // Çevrimdışı sinirsel çeviri (masaüstü, yerel zekâ paketi kuruluysa: TranslateGemma / NLLB); terimler sözlükten zorunlu
+    if (window.FCYZ && await FCYZ.ready('mt')) {
+      try {
+        const f = !from || from === 'auto' ? detect(text) : from;
+        const y = await FCYZ.translate(text, f, to, { memory: window.GLOSSARY || [] });
+        if (y && y.text && String(y.text).trim()) { drafts.add(y.text); scheduleMark(); return y.text; }
+      } catch (e) { console.warn('yerel çeviri', e); }
+    }
     const r = translate(text, from, to);
     if (r.draft) { drafts.add(r.text); scheduleMark(); if (Date.now() - toastT > 15000 && window.UI) { toastT = Date.now(); UI.toast(t('mtOffline')); } }
     return r.text;

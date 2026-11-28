@@ -140,6 +140,8 @@ app.whenReady().then(() => {
     return new Response(fs.readFileSync(file), { headers: { 'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream' } });
   });
 
+  // Çevrimdışı yapay zekâ (OCR + çeviri) — paketler kullanıcı klasörüne bir kez iner (ortak çekirdek web/yerel-zeka)
+  try { require('../cekirdek/electron/yerel-zeka/fc-yerel-zeka-main').install({ app, ipcMain }); } catch (e) { logErr && logErr('yerel-zeka: ' + e.message); }
   ipcMain.handle('db:save', (e, json) => { writeSafe(DB_FILE, json); dailyBackup(json); return true; });
   ipcMain.handle('db:load', () => { for (const f of [DB_FILE, DB_FILE + '.bak']) { try { if (fs.existsSync(f)) { const s = fs.readFileSync(f, 'utf8'); JSON.parse(s); return s; } } catch (e) {} } return null; });
   // ---- pencere: eski arayüz köprüsü (desktop.toggleFullscreen / minimize …) → ortak çekirdek davranışı ----

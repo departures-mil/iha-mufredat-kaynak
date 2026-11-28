@@ -3,6 +3,7 @@
    Eski kabuğun ota.* / kabuk.* uçları kaldırıldı: güncelleme artık ortak çekirdekte (FC.updater, GitHub Releases). */
 const { contextBridge, ipcRenderer } = require('electron');
 require('../cekirdek/electron/fc-preload.js');
+require('../cekirdek/electron/yerel-zeka/fc-yerel-zeka-preload').expose(contextBridge, ipcRenderer); // window.fcYerelZeka: çevrimdışı OCR + çeviri
 contextBridge.exposeInMainWorld('desktop', {
   saveDb: (json) => ipcRenderer.invoke('db:save', json),
   loadDb: () => ipcRenderer.invoke('db:load'),
